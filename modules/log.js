@@ -7,31 +7,31 @@ big stolen.
   Logger file. Logs to console a specified input with several options.
   To know more about it, check: https://github.com/TheRacingLion/Discord-SelfBot#--logging--
 */
-const moment = require('moment')
-const chalk = require('chalk')
+const moment = require('moment');
+const chalk = require('chalk');
 const status = {
-  online: `${chalk.green('"online"')}`,
-  idle: `${chalk.yellow('"idle"')}`,
-  dnd: `${chalk.red('"dnd"')} (Do Not Disturb)`,
-  invisible: '"invisible"'
-}
+  online: `${chalk.green("\"online\"")}`,
+  idle: `${chalk.yellow("\"idle\"")}`,
+  dnd: `${chalk.red("\"dnd\"")} (Do Not Disturb)`,
+  invisible: "\"invisible\""
+};
 
-function logger (bg, title, text) { console.log(`[${chalk.cyan(moment().format('H:mm:ss'))}]${chalk[bg].bold(` ${title} `)} ${text}`) }
+function logger (bg, title, text) { console.log(`[${chalk.cyan(moment().format("H:mm:ss"))}]${chalk[bg].bold(` ${title} `)} ${text}`); }
 
 module.exports = {
-  log (text, title = 'Log', bg = 'bgCyan') { logger(bg, title, text) },
-  warn (text) { logger('bgYellow', 'Warning', text) },
-  err (err, title = 'Bot') { logger('bgRed', `${title} Error`, `\n${(err && err.stack) || err}`) },
-  fs (text, title) { logger('bgGreen', title, text) },
+  log (text, title = "Log", bg = "bgCyan") { logger(bg, title, text) },
+  warn (text) { logger("bgYellow", "Warning", text) },
+  err (err, title = "Bot") { logger("bgRed", `${title} Error`, `\n${(err && err.stack) || err}`) },
+  fs (text, title) { logger("bgGreen", title, text) },
   cmd (msg, self) {
-    if (typeof msg === 'object') {
+    if (typeof msg === "object") {
       const cleanMsg = msg.cleanContent.replace(/\n/g, ' ')
-      logger('bgYellow', 'Msg', `|> ${chalk.magenta.bold(msg.channel.guild ? msg.channel.guild.name : 'in PMs')}: ${cleanMsg}`)
+      logger("bgYellow", "Msg", `|> ${chalk.magenta.bold(msg.channel.guild ? msg.channel.guild.name : "in PMs")}: ${cleanMsg}`)
     }
   },
   ready (self) {
     console.log(chalk.cyan([
-    `\n/==================== Started at ${chalk.yellow(moment(self.startTime).format('H:mm:ss'))} ====================/`,
+    `\n/==================== Started at ${chalk.yellow(moment(self.startTime).format("H:mm:ss"))} ====================/`,
     `| Logged in as ${chalk.yellow(self.user.username)}.`,
     `| ${chalk.white(`Your discord status is ${status[self.defaultStatus.toLowerCase()]}. Current stats:`)}`,
     `|   - ${chalk.yellow(self.guilds.size)} servers (${chalk.yellow(Object.keys(self.channelGuildMap).length)} channels) (${chalk.yellow(self.users.size)} users)`,

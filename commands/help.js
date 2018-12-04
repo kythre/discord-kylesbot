@@ -6,44 +6,22 @@
 exports.info = {
   args: "[command name]",
   description: "help"
-}
+};
 
 exports.run = (self, msg, args) => {
-  let fields = [
-    {
-      name: '**Core Commands**',
-      value: '`play`, `forceplay`, `multiplay`, `stats`'
-    },
-    {
-      name: '**Admin Commands**',
-      value: '`ban`, `kick`, `prune`, `prefix`, `rolesave`, `config`'
-    },
-    {
-      name: '**Fun Commands**',
-      value: '`secrets`, `insult`, `rps`, `coin`, `roll`'
-    },
-    {
-      name: "**Misc. Commands**",
-      value: '`coin`, `pick`, `invite`, `suggest`, `about`, `info`, `guild`'
-    },
-    {
-      name: "**Staff Commands**",
-      value: '`cinv`, `eval`, `blacklist`'
-    }
-  ]
-
-  let categoryEmbed = []
+  let categoryEmbed = [];
 
   for (let category in self.commandsOrganized){
-    let cmds = ""
+    let cmds = "";
+
     for (let cmd in self.commandsOrganized[category]){
-      cmds += '`' + self.commandsOrganized[category][cmd] + "` "
+      cmds += '`' + self.commandsOrganized[category][cmd] + "` ";
     }
 
     categoryEmbed.push({
       name: category,
       value: cmds
-    })
+    });
   }
 
   if (!args[0]) {
@@ -55,14 +33,14 @@ exports.run = (self, msg, args) => {
       }
     }});
   } else {
-    if (!self.commands[args[0]])
-        return msg.channel.createMessage("what?");
+    if (!self.commands[args[0]]){
+      return msg.channel.createMessage("what?");
+    }
 
-
-    console.log("a")
+    let cmd;
 
     try {
-        var cmd = require("../"+self.commands[args[0]]).info;
+        cmd = require("../"+self.commands[args[0]]).info;
         delete require.cache[require.resolve("../"+self.commands[args[0]])];
     }catch(err){
         return self.log.err(err);

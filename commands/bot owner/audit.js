@@ -8,8 +8,8 @@ exports.info = {
 };
 
 exports.run = async function(self, msg) {
-  self.commands = {}
-  self.commandsOrganized = {}
+  self.commands = {};
+  self.commandsOrganized = {};
   await self.audit();
   msg.channel.createMessage("done");
 };
