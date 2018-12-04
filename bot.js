@@ -1,5 +1,5 @@
 const secret = require('./data/secret.json')
-const guilds = require('./data/guilds.json')
+const guildSettings = require('./data/guilds.json')
 const Eris = require('eris')
 const fs = require('fs');
 const self = new Eris(secret.token)
@@ -7,7 +7,7 @@ const log = require('./modules/log.js')
 
 self.commands = {}
 self.commandsOrganized = {}
-self.guildSettings = {}
+self.guildSettings = guildSettings || {}
 self.isReady = false
 self.log = log
 self.secret = secret
