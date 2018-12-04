@@ -7,8 +7,8 @@ big stolen.
   Logger file. Logs to console a specified input with several options.
   To know more about it, check: https://github.com/TheRacingLion/Discord-SelfBot#--logging--
 */
-const moment = require('moment');
-const chalk = require('chalk');
+const moment = require("moment");
+const chalk = require("chalk");
 const status = {
   online: `${chalk.green("\"online\"")}`,
   idle: `${chalk.yellow("\"idle\"")}`,
@@ -19,14 +19,14 @@ const status = {
 function logger (bg, title, text) { console.log(`[${chalk.cyan(moment().format("H:mm:ss"))}]${chalk[bg].bold(` ${title} `)} ${text}`); }
 
 module.exports = {
-  log (text, title = "Log", bg = "bgCyan") { logger(bg, title, text) },
-  warn (text) { logger("bgYellow", "Warning", text) },
-  err (err, title = "Bot") { logger("bgRed", `${title} Error`, `\n${err && err.stack || err}`) },
-  fs (text, title) { logger("bgGreen", title, text) },
-  cmd (msg, bot) {
+  log (text, title = "Log", bg = "bgCyan") { logger(bg, title, text); },
+  warn (text) { logger("bgYellow", "Warning", text); },
+  err (err, title = "Bot") { logger("bgRed", `${title} Error`, `\n${err && err.stack || err}`); },
+  fs (text, title) { logger("bgGreen", title, text); },
+  cmd (msg) {
     if (typeof msg === "object") {
-      const cleanMsg = msg.cleanContent.replace(/\n/g, ' ')
-      logger("bgYellow", "Msg", `|> ${chalk.magenta.bold(msg.channel.guild ? msg.channel.guild.name : "in PMs")}: ${cleanMsg}`)
+      const cleanMsg = msg.cleanContent.replace(/\n/g, " ");
+      logger("bgYellow", "Msg", `|> ${chalk.magenta.bold(msg.channel.guild ? msg.channel.guild.name : "in DMs")}: ${cleanMsg}`);
     }
   },
   ready (bot) {
@@ -38,6 +38,6 @@ module.exports = {
     `| ${chalk.white('Logging was successful. Waiting for orders...')}`,
     `| Use ${chalk.yellow('Control + C')} to exit. Or ${chalk.yellow('Cmd + C')} for Mac.`,
     `/=============================================================/`
-    ].join('\n')))
+    ].join("\n")));
   }
 }

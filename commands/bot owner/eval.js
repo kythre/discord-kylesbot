@@ -4,7 +4,7 @@
 * @return {string} The output of the eval function.
 */
 
-const util = require("util")
+const util = require("util");
 
 exports.info = {
   args: "[code]",

@@ -16,37 +16,37 @@ bot.prefix = "k!";
 bot.defaultStatus = "online";
 bot.color = 0x00B6FF;
 
-process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000) });
+process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
 process.on("exit", (code) => log.err(`Exited with code ${code}`, 'Exit'));
 process.on("unhandledRejection", (err) => log.err(err, "Promise was rejected but there was no error handler"));
 process.on("uncaughtException", (err) => log.err(err, "Exception"));
 
-bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg) } });
+bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg); } });
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
 bot.audit = function (dir = "./commands", cmds = {}){
-    return new Promise(resolve => {
-        fs.readdir(dir, {withFileTypes:true}, async (err, files)=>{
+    return new Promise((resolve) => {
+        fs.readdir(dir, {withFileTypes:true}, async (err, files) => {
             for (let i in files){
-                let path = `${dir}/${files[i].name}`
+                let path = `${dir}/${files[i].name}`;
                 if (files[i].isDirectory()){
-                    await bot.audit(path, cmds)
+                    await bot.audit(path, cmds);
                 }else{
-                    let fileextregex = /(\.js)$/gi
+                    let fileextregex = /(\.js)$/gi;
                     if (files[i].name.match(fileextregex)){
                         let cmd = files[i].name.replace(fileextregex, "");
 
                         if (cmds[cmd]){
-                            log.warn(`Duplicate command found: ${files[i].name} ${path}`)
+                            log.warn(`Duplicate command found: ${files[i].name} ${path}`);
                             continue;
                         }else{
                             cmds[cmd] = path
 
-                            let category = path.match(/[^//]+(?=\/)/g)[2]
-                            category = category || "misc"
+                            let category = path.match(/[^//]+(?=\/)/g)[2];
+                            category = category || "misc";
 
-                            bot.commandsOrganized[category] = bot.commandsOrganized[category] || []
+                            bot.commandsOrganized[category] = bot.commandsOrganized[category] || [];
                             bot.commandsOrganized[category].push(cmd);
 
                             log.log(`${files[i].name} ${path}`, "Command registered:");
@@ -58,11 +58,13 @@ bot.audit = function (dir = "./commands", cmds = {}){
             resolve();
         });
     });
-}
+};
 
-bot.on('ready', async () => {
-    bot.guilds.forEach(g => {
-        if(!bot.guildSettings[g.id]) bot.guildSettings[g.id] = {prefix: bot.prefix};
+bot.on("ready", async () => {
+    bot.guilds.forEach((g) => {
+        if(!bot.guildSettings[g.id]){
+            bot.guildSettings[g.id] = {prefix: bot.prefix};
+        }
     });
 
     await bot.audit();
@@ -86,18 +88,22 @@ bot.on("messageCreate", (msg) => {
     if(prefix){
         prefix = prefix[0];
     }else{
-        if (msg.channel.guild) return;
+        if (msg.channel.guild){
+return;
+        } 
         prefix = "";
     }
 
     let cmd = msg.content.slice(prefix.length).toLowerCase().split(" ")[0];
     let args = msg.content.slice(prefix.length + cmd.length).split(" ").slice(1);
 
-    if (!bot.commands[cmd])
+    if (!bot.commands[cmd]){
         return msg.channel.createMessage(prefix + "help");
+    }
 
-    if (bot.commands[cmd].includes("bot owner") && msg.author.id !== bot.owner)
+    if (bot.commands[cmd].includes("bot owner") && msg.author.id !== bot.owner){
         return msg.channel.createMessage("negatory");
+    }
 
     try {
         log.cmd(msg, bot);
@@ -120,4 +126,4 @@ bot.on("messageCreate", (msg) => {
     }
 });
 
-bot.connect().catch(err => log.err(err, 'Login'));
+bot.connect().catch((err) => log.err(err, "Login"));

@@ -15,7 +15,7 @@ exports.run = (bot, msg, args) => {
     let cmds = "";
 
     for (let cmd in bot.commandsOrganized[category]){
-      cmds += '`' + bot.commandsOrganized[category][cmd] + "` ";
+      cmds += "`" + bot.commandsOrganized[category][cmd] + "` ";
     }
 
     categoryEmbed.push({
@@ -24,15 +24,7 @@ exports.run = (bot, msg, args) => {
     });
   }
 
-  if (!args[0]) {
-    bot.createMessage(msg.channel.id, {embed: {
-      color: bot.color,
-      fields: categoryEmbed,
-      footer: {
-        text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : bot.prefix}help [command name]`
-      }
-    }});
-  } else {
+  if (args[0]) {
     if (!bot.commands[args[0]]){
       return msg.channel.createMessage("what?");
     }
@@ -55,5 +47,13 @@ exports.run = (bot, msg, args) => {
         ]
       }
     });
+  } else {
+    bot.createMessage(msg.channel.id, {embed: {
+      color: bot.color,
+      fields: categoryEmbed,
+      footer: {
+        text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : bot.prefix}help [command name]`
+      }
+    }});
   }
 };
