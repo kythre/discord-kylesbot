@@ -21,20 +21,20 @@ function logger (bg, title, text) { console.log(`[${chalk.cyan(moment().format("
 module.exports = {
   log (text, title = "Log", bg = "bgCyan") { logger(bg, title, text) },
   warn (text) { logger("bgYellow", "Warning", text) },
-  err (err, title = "Bot") { logger("bgRed", `${title} Error`, `\n${(err && err.stack) || err}`) },
+  err (err, title = "Bot") { logger("bgRed", `${title} Error`, `\n${err && err.stack || err}`) },
   fs (text, title) { logger("bgGreen", title, text) },
-  cmd (msg, self) {
+  cmd (msg, bot) {
     if (typeof msg === "object") {
       const cleanMsg = msg.cleanContent.replace(/\n/g, ' ')
       logger("bgYellow", "Msg", `|> ${chalk.magenta.bold(msg.channel.guild ? msg.channel.guild.name : "in PMs")}: ${cleanMsg}`)
     }
   },
-  ready (self) {
+  ready (bot) {
     console.log(chalk.cyan([
-    `\n/==================== Started at ${chalk.yellow(moment(self.startTime).format("H:mm:ss"))} ====================/`,
-    `| Logged in as ${chalk.yellow(self.user.username)}.`,
-    `| ${chalk.white(`Your discord status is ${status[self.defaultStatus.toLowerCase()]}. Current stats:`)}`,
-    `|   - ${chalk.yellow(self.guilds.size)} servers (${chalk.yellow(Object.keys(self.channelGuildMap).length)} channels) (${chalk.yellow(self.users.size)} users)`,
+    `\n/==================== Started at ${chalk.yellow(moment(bot.startTime).format("H:mm:ss"))} ====================/`,
+    `| Logged in as ${chalk.yellow(bot.user.username)}.`,
+    `| ${chalk.white(`Your discord status is ${status[bot.defaultStatus.toLowerCase()]}. Current stats:`)}`,
+    `|   - ${chalk.yellow(bot.guilds.size)} servers (${chalk.yellow(Object.keys(bot.channelGuildMap).length)} channels) (${chalk.yellow(bot.users.size)} users)`,
     `| ${chalk.white('Logging was successful. Waiting for orders...')}`,
     `| Use ${chalk.yellow('Control + C')} to exit. Or ${chalk.yellow('Cmd + C')} for Mac.`,
     `/=============================================================/`

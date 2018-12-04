@@ -3,6 +3,6 @@ exports.info = {
   description: "does nothing"
 };
 
-exports.run = async function(self, msg, args) {
+exports.run = async function(bot, msg, args) {
   //nothing
 };

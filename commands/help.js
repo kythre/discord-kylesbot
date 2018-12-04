@@ -8,14 +8,14 @@ exports.info = {
   description: "help"
 };
 
-exports.run = (self, msg, args) => {
+exports.run = (bot, msg, args) => {
   let categoryEmbed = [];
 
-  for (let category in self.commandsOrganized){
+  for (let category in bot.commandsOrganized){
     let cmds = "";
 
-    for (let cmd in self.commandsOrganized[category]){
-      cmds += '`' + self.commandsOrganized[category][cmd] + "` ";
+    for (let cmd in bot.commandsOrganized[category]){
+      cmds += '`' + bot.commandsOrganized[category][cmd] + "` ";
     }
 
     categoryEmbed.push({
@@ -25,29 +25,29 @@ exports.run = (self, msg, args) => {
   }
 
   if (!args[0]) {
-    self.createMessage(msg.channel.id, {embed: {
-      color: self.color,
+    bot.createMessage(msg.channel.id, {embed: {
+      color: bot.color,
       fields: categoryEmbed,
       footer: {
-        text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? self.guildSettings[msg.channel.guild.id].prefix : self.prefix}help [command name]`
+        text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : bot.prefix}help [command name]`
       }
     }});
   } else {
-    if (!self.commands[args[0]]){
+    if (!bot.commands[args[0]]){
       return msg.channel.createMessage("what?");
     }
 
     let cmd;
 
     try {
-        cmd = require("../"+self.commands[args[0]]).info;
-        delete require.cache[require.resolve("../"+self.commands[args[0]])];
+        cmd = require("../"+bot.commands[args[0]]).info;
+        delete require.cache[require.resolve("../"+bot.commands[args[0]])];
     }catch(err){
-        return self.log.err(err);
+        return bot.log.err(err);
     }
 
-    self.createMessage(msg.channel.id, {embed: {
-        color: self.color,
+    bot.createMessage(msg.channel.id, {embed: {
+        color: bot.color,
         title: `${args[0]} command info`,
         fields: [
           { name: "description", value: cmd.description },

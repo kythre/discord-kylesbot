@@ -4,15 +4,15 @@
 * @return {string} The output of the eval function.
 */
 
-const util = require('util')
+const util = require("util")
 
 exports.info = {
   args: "[code]",
   description: "runs ur code"
 };
 
-exports.run = function(self, msg, args) {
-  let input = ' '+args.join(' ');
+exports.run = function(bot, msg, args) {
+  let input = " "+args.join(" ");
   let evaled;
 
   try {
@@ -23,19 +23,19 @@ exports.run = function(self, msg, args) {
   
   evaled = util.inspect(evaled);
   
-  evaled.replace(/`/g, '`' + String.fromCharCode(8203));
+  evaled.replace(/`/g, "`" + String.fromCharCode(8203));
 
-  for (var i in self.secret){
-    evaled = evaled.replace(self.secret[i], "👀");
+  for (var i in bot.secret){
+    evaled = evaled.replace(bot.secret[i], "👀");
   }
 
   if (evaled.length > 1024){
     evaled = evaled.substring(0, evaled.length-(evaled.length-1012)) + "...";
   }
 
-  return self.createMessage(msg.channel.id, {embed:
+  return bot.createMessage(msg.channel.id, {embed:
     {
-      color: self.color,
+      color: bot.color,
       fields: [
         {
           name: "Input:",
