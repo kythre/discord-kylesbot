@@ -35,9 +35,9 @@ module.exports = {
     `| Logged in as ${chalk.yellow(bot.user.username)}.`,
     `| ${chalk.white(`Your discord status is ${status[bot.defaultStatus.toLowerCase()]}. Current stats:`)}`,
     `|   - ${chalk.yellow(bot.guilds.size)} servers (${chalk.yellow(Object.keys(bot.channelGuildMap).length)} channels) (${chalk.yellow(bot.users.size)} users)`,
-    `| ${chalk.white('Logging was successful. Waiting for orders...')}`,
-    `| Use ${chalk.yellow('Control + C')} to exit. Or ${chalk.yellow('Cmd + C')} for Mac.`,
-    `/=============================================================/`
+    `| ${chalk.white("Logging was successful. Waiting for orders...")}`,
+    `| Use ${chalk.yellow("Control + C")} to exit. Or ${chalk.yellow("Cmd + C")} for Mac.`,
+    "/=============================================================/"
     ].join("\n")));
   }
-}
+};

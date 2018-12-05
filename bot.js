@@ -14,12 +14,12 @@ bot.secret = secret;
 bot.owner = "115340880117891072";
 bot.prefix = "k!";
 bot.defaultStatus = "online";
-bot.color = 0x00B6FF;
+bot.color = 46847;
 
 process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
-process.on("exit", (code) => log.err(`Exited with code ${code}`, 'Exit'));
-process.on("unhandledRejection", (err) => log.err(err, "Promise was rejected but there was no error handler"));
-process.on("uncaughtException", (err) => log.err(err, "Exception"));
+process.on("exit", (code) => log.err(`Exited with code ${code}`, "Exit"));
+process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
+process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 
 bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg); } });
 bot.on("error", (err) => log.err(err, "Bot"));
@@ -41,7 +41,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
                             log.warn(`Duplicate command found: ${files[i].name} ${path}`);
                             continue;
                         }else{
-                            cmds[cmd] = path
+                            cmds[cmd] = path;
 
                             let category = path.match(/[^//]+(?=\/)/g)[2];
                             category = category || "misc";
@@ -62,9 +62,8 @@ bot.audit = function (dir = "./commands", cmds = {}){
 
 bot.on("ready", async () => {
     bot.guilds.forEach((g) => {
-        if(!bot.guildSettings[g.id]){
-            bot.guildSettings[g.id] = {prefix: bot.prefix};
-        }
+        g.commands = {}
+        g.settings = {prefix: bot.prefix};
     });
 
     await bot.audit();
@@ -74,7 +73,7 @@ bot.on("ready", async () => {
     log.ready(bot);
 });
 
-bot.on("messageCreate", (msg) => {
+bot.on("messageCreate", async (msg) => {
     if (!bot.isReady || !msg.author){
         return;
     } 
@@ -82,14 +81,14 @@ bot.on("messageCreate", (msg) => {
         return;
     }
 
-    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : bot.prefix}))\\s?`, "gi");
+    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : bot.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
 
     if(prefix){
         prefix = prefix[0];
     }else{
         if (msg.channel.guild){
-return;
+            return;
         } 
         prefix = "";
     }
@@ -105,9 +104,33 @@ return;
         return msg.channel.createMessage("negatory");
     }
 
+    if (bot.commands[cmd].includes("guild") && !msg.channel.guild){
+        return msg.channel.createMessage("negatory");
+    }
+
     try {
         log.cmd(msg, bot);
-        require(bot.commands[cmd]).run(bot, msg, args);
+
+        if (msg.channel.guild){
+            if (bot.guilds.get(msg.channel.guild.id).commands["channelflair"]){
+                return bot.createMessage(msg.channel.id, {embed:
+                  {
+                    color: bot.color,
+                    title: "Command currently running"
+                  }
+                });
+            }
+            
+            bot.guilds.get(msg.channel.guild.id).commands[cmd] = true
+        }
+
+        await require(bot.commands[cmd]).run(bot, msg, args);
+
+        if (msg.channel.guild){
+            bot.guilds.get(msg.channel.guild.id).commands[cmd] = false
+        }
+        
+        console.log("done")
     } catch (err) {
         if(err.message.includes("Cannot find module") || err.message.includes("ENOENT")){
             return;

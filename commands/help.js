@@ -48,12 +48,15 @@ exports.run = (bot, msg, args) => {
       }
     });
   } else {
-    bot.createMessage(msg.channel.id, {embed: {
-      color: bot.color,
-      fields: categoryEmbed,
-      footer: {
-        text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : bot.prefix}help [command name]`
+    bot.createMessage(msg.channel.id, {
+        embed: {
+          color: bot.color,
+          fields: categoryEmbed,
+          footer: {
+            text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : bot.prefix}help [command name]`
+          }
+        }
       }
-    }});
+    );
   }
 };
