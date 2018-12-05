@@ -6,7 +6,6 @@ const bot = new Eris(secret.token);
 const log = require("./modules/log.js");
 
 bot.commands = {};
-bot.commandsOrganized = {};
 bot.guildSettings = guildSettings || {};
 bot.isReady = false;
 bot.log = log;
@@ -41,14 +40,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
                             log.warn(`Duplicate command found: ${files[i].name} ${path}`);
                             continue;
                         }else{
-                            cmds[cmd] = path;
-
-                            let category = path.match(/[^//]+(?=\/)/g)[2];
-                            category = category || "misc";
-
-                            bot.commandsOrganized[category] = bot.commandsOrganized[category] || [];
-                            bot.commandsOrganized[category].push(cmd);
-
+                            cmds[cmd] = {};
                             log.log(`${files[i].name} ${path}`, "Command registered:");
                         }
                     }

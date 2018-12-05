@@ -10,18 +10,22 @@ exports.info = {
 
 exports.run = (bot, msg, args) => {
   let categoryEmbed = [];
+  let cmdCategories = {};
 
-  for (let category in bot.commandsOrganized){
-    let cmds = "";
+  for(let cmd in bot.commands){    
+    let category = bot.commands[cmd].match(/[^//]+(?=\/)/g)[2];
+    category = category || "misc";
 
-    for (let cmd in bot.commandsOrganized[category]){
-      cmds += "`" + bot.commandsOrganized[category][cmd] + "` ";
-    }
-
-    categoryEmbed.push({
+    cmdCategories[category] = cmdCategories[category] || {
       name: category,
-      value: cmds
-    });
+      value: ""
+    };
+
+    cmdCategories[category].value  += " `" + cmd + "`";
+  }
+
+  for (let category in cmdCategories){
+    categoryEmbed.push(cmdCategories[category]);
   }
 
   if (args[0]) {
@@ -50,11 +54,9 @@ exports.run = (bot, msg, args) => {
   } else {
     bot.createMessage(msg.channel.id, {
         embed: {
+          description: `To get \"in depth\" details for commands, do \`${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : ""}help [command name]\``,
           color: bot.color,
-          fields: categoryEmbed,
-          footer: {
-            text: `To get \"in depth\" details for commands, do ${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : bot.prefix}help [command name]`
-          }
+          fields: categoryEmbed
         }
       }
     );
