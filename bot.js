@@ -6,7 +6,7 @@ const bot = new Eris(secret.token);
 const log = require("./modules/log.js");
 
 bot.commands = {};
-bot.guildSettings = guildSettings || {};
+bot.guildSettings = guildSettings;
 bot.isReady = false;
 bot.log = log;
 bot.secret = secret;
@@ -40,7 +40,13 @@ bot.audit = function (dir = "./commands", cmds = {}){
                             log.warn(`Duplicate command found: ${files[i].name} ${path}`);
                             continue;
                         }else{
-                            cmds[cmd] = {};
+                            let category = path.match(/[^//]+(?=\/)/g)[2];
+                            category = category || "misc";
+
+                            cmds[cmd] = {
+                                path: path,
+                                categ: category
+                            };
                             log.log(`${files[i].name} ${path}`, "Command registered:");
                         }
                     }
@@ -54,7 +60,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
 
 bot.on("ready", async () => {
     bot.guilds.forEach((g) => {
-        g.commands = {}
+        g.cmdsrunning = {}
         g.settings = {prefix: bot.prefix};
     });
 
@@ -92,11 +98,11 @@ bot.on("messageCreate", async (msg) => {
         return msg.channel.createMessage(prefix + "help");
     }
 
-    if (bot.commands[cmd].includes("bot owner") && msg.author.id !== bot.owner){
+    if (bot.commands[cmd] === "bot owner" && msg.author.id !== bot.owner){
         return msg.channel.createMessage("negatory");
     }
 
-    if (bot.commands[cmd].includes("guild") && !msg.channel.guild){
+    if (bot.commands[cmd].categ === "guild" && !msg.channel.guild){
         return msg.channel.createMessage("negatory");
     }
 
@@ -104,7 +110,7 @@ bot.on("messageCreate", async (msg) => {
         log.cmd(msg, bot);
 
         if (msg.channel.guild){
-            if (bot.guilds.get(msg.channel.guild.id).commands["channelflair"]){
+            if (bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd]){
                 return bot.createMessage(msg.channel.id, {embed:
                   {
                     color: bot.color,
@@ -113,16 +119,15 @@ bot.on("messageCreate", async (msg) => {
                 });
             }
             
-            bot.guilds.get(msg.channel.guild.id).commands[cmd] = true
+            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = true
         }
 
-        await require(bot.commands[cmd]).run(bot, msg, args);
+        await require(bot.commands[cmd].path).run(bot, msg, args);
 
         if (msg.channel.guild){
-            bot.guilds.get(msg.channel.guild.id).commands[cmd] = false
+            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = false
         }
-        
-        console.log("done")
+
     } catch (err) {
         if(err.message.includes("Cannot find module") || err.message.includes("ENOENT")){
             return;
@@ -135,7 +140,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     try {
-        delete require.cache[require.resolve(bot.commands[cmd])];
+        delete require.cache[require.resolve(bot.commands[cmd].path)];
     }catch(err){
         log.err(err.stack, "youre fucking stupid");
     }

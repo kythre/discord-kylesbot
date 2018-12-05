@@ -13,8 +13,7 @@ exports.run = (bot, msg, args) => {
   let cmdCategories = {};
 
   for(let cmd in bot.commands){    
-    let category = bot.commands[cmd].match(/[^//]+(?=\/)/g)[2];
-    category = category || "misc";
+    let category = bot.commands[cmd].categ
 
     cmdCategories[category] = cmdCategories[category] || {
       name: category,
