@@ -30,7 +30,7 @@ exports.run = (bot, msg, args) => {
   if (args[0]) {
     let command = bot.commands[args[0]];
 
-    if (command === undefined){
+    if (!command){
       return msg.channel.createMessage("what?");
     }
 
