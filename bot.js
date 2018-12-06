@@ -140,11 +140,11 @@ bot.on("messageCreate", async (msg) => {
             return;
         }
         
-        log.err(err.stack, cmd);
-
-        msg.channel.createMessage(`\`\`\`${
-            err.substring(0, err.length-(err.length-1991)) + err.length>2000 ? "..." : ""
-        }\`\`\``);
+        log.err(err.stack, bot.commands[cmd]);
+        if(err.length > 2000){
+            err = err.substring(0, err.length-(err.length-1991)) + "...";
+        }
+        msg.channel.createMessage(`\`\`\`${err}\`\`\``);
     }
 
     if (msg.channel.guild){

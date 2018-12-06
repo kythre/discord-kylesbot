@@ -9,23 +9,24 @@ exports.info = {
 };
 
 exports.run = (bot, msg, args) => {
-  let categoryEmbeds = [];
-  let commandCategoryFields = {};
+  s
 
-  for(let cmd in bot.commands){    
-    let category = bot.commands[cmd].category;
-    let commandCategoryField = cmdCategories[category]
+  let commandCategoryFields = [];
+  let commandCategoryField = {};
 
-    commandCategoryField = commandCategoryField || {
-      name: category,
+  for(let i in bot.commands){    
+    let command = bot.commands[i];
+
+    commandCategoryField[command.category] = commandCategoryField[command.category] || {
+      name: command.category,
       value: ""
     };
 
-    commandCategoryField.value  += " `" + cmd + "`";
+    commandCategoryField[command.category].value  += " `" + command.cmd + "`";
   }
 
-  for (let category in cmdCategories){
-    commandCategoryFields.push(cmdCategories[category]);
+  for (let i in commandCategoryField){
+    commandCategoryFields.push(commandCategoryField[i]);
   }
 
   if (args[0]) {
