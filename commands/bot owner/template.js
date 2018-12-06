@@ -4,5 +4,6 @@ exports.info = {
 };
 
 exports.run = async function (bot, msg, args) {
-  return bot.createMessage(msg.channel.id, "aaaaAAAAAAAAAAA");
+  bot.createMessage(msg.channel.id, "aaaaAAAAAAAAAAA " + args.join(" "));
+  return;
 };

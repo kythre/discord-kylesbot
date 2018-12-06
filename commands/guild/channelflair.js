@@ -13,7 +13,8 @@ exports.run = async function (bot, msg, args) {
 
   let failedChannels = [];
   for (let channel of msg.channel.guild.channels){
-    let channelObj = channel[1]
+    let channelObj = channel[1];
+    
     if (channelObj.type === 0){
       try{
         await channelObj.edit({name: channelObj.name});

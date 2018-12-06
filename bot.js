@@ -32,7 +32,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
             }
 
             for (let i in files){
-                let file = files[i]
+                let file = files[i];
                 let path = `${dir}/${file.name}`;
 
                 if (file.isDirectory()){
@@ -95,7 +95,7 @@ bot.on("messageCreate", async (msg) => {
         if (msg.channel.guild){
             return;
         } 
-        prefix = ""
+        prefix = "";
     }
 
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];

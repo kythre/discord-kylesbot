@@ -9,8 +9,6 @@ exports.info = {
 };
 
 exports.run = (bot, msg, args) => {
-  s
-
   let commandCategoryFields = [];
   let commandCategoryField = {};
 
@@ -30,7 +28,7 @@ exports.run = (bot, msg, args) => {
   }
 
   if (args[0]) {
-    let command = bot.commands[args[0]]
+    let command = bot.commands[args[0]];
 
     if (command === undefined){
       return msg.channel.createMessage("what?");
@@ -49,8 +47,8 @@ exports.run = (bot, msg, args) => {
         color: bot.color,
         title: `${command.cmd} command info`,
         fields: [
-          { name: "description", value: commandInfo.description },
-          { name: "arguments", value: commandInfo.args }
+          {name: "description", value: commandInfo.description},
+          {name: "arguments", value: commandInfo.args}
         ]
       }
     });
