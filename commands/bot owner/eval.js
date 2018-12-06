@@ -11,8 +11,8 @@ exports.info = {
   description: "runs ur code"
 };
 
-exports.run = function(bot, msg, args) {
-  let input = " "+args.join(" ");
+exports.run = function (bot, msg, args) {
+  let input = " " + args.join(" ");
   let evaled;
 
   try {
@@ -25,7 +25,7 @@ exports.run = function(bot, msg, args) {
   
   evaled.replace(/`/g, "`" + String.fromCharCode(8203));
 
-  for (var i in bot.secret){
+  for (let i in bot.secret){
     evaled = evaled.replace(bot.secret[i], "👀");
   }
 

@@ -3,7 +3,7 @@ exports.info = {
   description: "adds a flair to all channels"
 };
 
-exports.run = async function(bot, msg, args) {
+exports.run = async function (bot, msg, args) {
   let nmsg = await bot.createMessage(msg.channel.id, {embed:
     {
       color: bot.color,
@@ -11,23 +11,24 @@ exports.run = async function(bot, msg, args) {
     }
   });
 
-  let failedChannels = []
-  for(let channel of msg.channel.guild.channels){
-    if(channel[1].type == 0){
+  let failedChannels = [];
+  for (let channel of msg.channel.guild.channels){
+    let channelObj = channel[1]
+    if (channelObj.type === 0){
       try{
-        await channel[1].edit({name: channel[1].name});
+        await channelObj.edit({name: channelObj.name});
       }catch(err){
-        failedChannels.push(channel[1])
+        failedChannels.push(channelObj);
       }
     }
   }
 
-  let channelsFailedString = ""
+  let channelsFailedString = "";
   for (let channel of failedChannels){
-    channelsFailedString = channelsFailedString + "\n" + channel.name
+    channelsFailedString = channelsFailedString + "\n" + channel.name;
   }
 
-  return bot.editMessage(nmsg.channel.id, nmsg.id, {embed:
+  return bot.editMessage (nmsg.channel.id, nmsg.id, {embed:
     {
       color: bot.color,
       fields: [

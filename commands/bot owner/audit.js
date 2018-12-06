@@ -7,7 +7,7 @@ exports.info = {
   description: "audits all command files"
 };
 
-exports.run = async function(bot, msg) {
+exports.run = async function (bot, msg) {
   bot.commands = {};
   bot.commandsOrganized = {};
   await bot.audit();

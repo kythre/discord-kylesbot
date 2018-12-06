@@ -3,6 +3,6 @@ exports.info = {
   description: "does nothing"
 };
 
-exports.run = async function(bot, msg, args) {
-  //nothing
+exports.run = async function (bot, msg, args) {
+  return bot.createMessage(msg.channel.id, "aaaaAAAAAAAAAAA");
 };

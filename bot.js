@@ -1,9 +1,14 @@
 const secret = require("./data/secret.json");
-const guildSettings = require("./data/guilds.json");
 const Eris = require("eris");
-const fs = require("fs");
 const bot = new Eris(secret.token);
+const fs = require("fs");
 const log = require("./modules/log.js");
+const guildSettings = require("./data/guilds.json");
+
+process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
+process.on("exit", (code) => log.err(`Exited with code ${code}`, "Exit"));
+process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
+process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 
 bot.commands = {};
 bot.guildSettings = guildSettings;
@@ -15,39 +20,40 @@ bot.prefix = "k!";
 bot.defaultStatus = "online";
 bot.color = 46847;
 
-process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
-process.on("exit", (code) => log.err(`Exited with code ${code}`, "Exit"));
-process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
-process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
-
 bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg); } });
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
 bot.audit = function (dir = "./commands", cmds = {}){
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         fs.readdir(dir, {withFileTypes:true}, async (err, files) => {
+            if(err){
+                reject();
+            }
+
             for (let i in files){
-                let path = `${dir}/${files[i].name}`;
-                if (files[i].isDirectory()){
+                let file = files[i]
+                let path = `${dir}/${file.name}`;
+
+                if (file.isDirectory()){
                     await bot.audit(path, cmds);
                 }else{
-                    let fileextregex = /(\.js)$/gi;
-                    if (files[i].name.match(fileextregex)){
-                        let cmd = files[i].name.replace(fileextregex, "");
+                    let regexJSFile = /(\.js)$/gi;
+                    if (file.name.match(regexJSFile)){
+                        let cmd = file.name.replace(regexJSFile, "");
 
                         if (cmds[cmd]){
-                            log.warn(`Duplicate command found: ${files[i].name} ${path}`);
-                            continue;
+                            log.warn(`Duplicate command found: ${file.name} ${path}`);
                         }else{
-                            let category = path.match(/[^//]+(?=\/)/g)[2];
-                            category = category || "misc";
+                            let category = path.match(/[^//]+(?=\/)/g)[2] || "misc";
 
                             cmds[cmd] = {
+                                cmd,
                                 path,
                                 category
                             };
-                            log.log(`${files[i].name} ${path}`, "Command registered:");
+
+                            log.log(`${file.name} ${path}`, "Command registered:");
                         }
                     }
                 }
@@ -75,6 +81,7 @@ bot.on("messageCreate", async (msg) => {
     if (!bot.isReady || !msg.author){
         return;
     } 
+
     if (msg.author === bot.user){
         return;
     }
@@ -82,65 +89,70 @@ bot.on("messageCreate", async (msg) => {
     let prefixRegex = new RegExp(`^((${bot.user.mention})|(${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : bot.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
 
-    if(prefix){
+    if (prefix !== null){
         prefix = prefix[0];
     }else{
         if (msg.channel.guild){
             return;
         } 
-        prefix = "";
+        prefix = ""
     }
 
-    let cmd = msg.content.slice(prefix.length).toLowerCase().split(" ")[0];
-    let args = msg.content.slice(prefix.length + cmd.length).split(" ").slice(1);
+    let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
 
-    if (!bot.commands[cmd]){
-        return msg.channel.createMessage(prefix + "help");
+    if (!cmd){
+        msg.channel.createMessage(prefix + "help");
+        return;
     }
 
-    if (bot.commands[cmd] === "bot owner" && msg.author.id !== bot.owner){
-        return msg.channel.createMessage("negatory");
+    let args = msg.content.slice(prefix.length + cmd.cmd.length).split(" ").slice(1);
+
+    if (cmd.category === "bot owner" && msg.author.id !== bot.owner){
+        msg.channel.createMessage("negatory");
+        return;
     }
 
-    if (bot.commands[cmd].categ === "guild" && !msg.channel.guild){
-        return msg.channel.createMessage("negatory");
+    if (cmd.category === "guild" && !msg.channel.guild){
+        msg.channel.createMessage("negatory");
+        return;
     }
 
     try {
         log.cmd(msg, bot);
 
         if (msg.channel.guild){
-            if (bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd]){
-                return bot.createMessage(msg.channel.id, {embed:
-                  {
-                    color: bot.color,
-                    title: "Command currently running"
-                  }
-                });
+            if (bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd]){
+                bot.createMessage(msg.channel.id, {embed:
+                    {
+                      color: bot.color,
+                      title: "Command currently running"
+                    }
+                  });
+                return;
             }
             
-            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = true;
+            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd] = true;
         }
 
-        await require(bot.commands[cmd].path).run(bot, msg, args);
-
-        if (msg.channel.guild){
-            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = false;
-        }
-
+        await require(cmd.path).run(bot, msg, args);
     } catch (err) {
         if(err.message.includes("Cannot find module") || err.message.includes("ENOENT")){
             return;
         }
-        log.err(err.stack, bot.commands[cmd]);
-        if(err.length > 2000){
-            err = err.substring(0, err.length-(err.length-1991)) + "...";
-        }
-        msg.channel.createMessage(`\`\`\`${err}\`\`\``);
+        
+        log.err(err.stack, cmd);
+
+        msg.channel.createMessage(`\`\`\`${
+            err.substring(0, err.length-(err.length-1991)) + err.length>2000 ? "..." : ""
+        }\`\`\``);
+    }
+
+    if (msg.channel.guild){
+        bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd] = false;
     }
 
     try {
-        delete require.cache[require.resolve(bot.commands[cmd].path)];
+        delete require.cache[require.resolve(cmd.path)];
     }catch(err){
         log.err(err.stack, "youre fucking stupid");
     }
