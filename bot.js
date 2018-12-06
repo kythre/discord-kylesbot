@@ -44,8 +44,8 @@ bot.audit = function (dir = "./commands", cmds = {}){
                             category = category || "misc";
 
                             cmds[cmd] = {
-                                path: path,
-                                categ: category
+                                path,
+                                category
                             };
                             log.log(`${files[i].name} ${path}`, "Command registered:");
                         }
@@ -60,7 +60,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
 
 bot.on("ready", async () => {
     bot.guilds.forEach((g) => {
-        g.cmdsrunning = {}
+        g.cmdsrunning = {};
         g.settings = {prefix: bot.prefix};
     });
 
@@ -119,13 +119,13 @@ bot.on("messageCreate", async (msg) => {
                 });
             }
             
-            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = true
+            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = true;
         }
 
         await require(bot.commands[cmd].path).run(bot, msg, args);
 
         if (msg.channel.guild){
-            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = false
+            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd] = false;
         }
 
     } catch (err) {

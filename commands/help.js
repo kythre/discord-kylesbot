@@ -13,7 +13,7 @@ exports.run = (bot, msg, args) => {
   let cmdCategories = {};
 
   for(let cmd in bot.commands){    
-    let category = bot.commands[cmd].categ
+    let category = bot.commands[cmd].category;
 
     cmdCategories[category] = cmdCategories[category] || {
       name: category,
@@ -35,8 +35,8 @@ exports.run = (bot, msg, args) => {
     let cmd;
 
     try {
-        cmd = require("../"+bot.commands[args[0]]).info;
-        delete require.cache[require.resolve("../"+bot.commands[args[0]])];
+        cmd = require("../"+bot.commands[args[0]].path).info;
+        delete require.cache[require.resolve("../"+bot.commands[args[0]].path)];
     }catch(err){
         return bot.log.err(err);
     }
