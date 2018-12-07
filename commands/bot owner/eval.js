@@ -30,10 +30,10 @@ exports.run = function (bot, msg, args) {
   }
 
   if (evaled.length > 1024){
-    evaled = evaled.substring(0, evaled.length-(evaled.length-1012)) + "...";
+    evaled = evaled.substring(0, 1012) + "...";
   }
 
-  return bot.createMessage(msg.channel.id, {embed:
+  return bot.send(msg,
     {
       color: bot.color,
       fields: [
@@ -49,5 +49,5 @@ exports.run = function (bot, msg, args) {
         }
       ]
     }
-  });
+  );
 };

@@ -11,5 +11,5 @@ exports.run = async function (bot, msg) {
   bot.commands = {};
   bot.commandsOrganized = {};
   await bot.audit();
-  msg.channel.createMessage("done");
+  bot.send(msg, "done");
 };

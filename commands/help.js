@@ -43,23 +43,18 @@ exports.run = (bot, msg, args) => {
         return bot.log.err(err);
     }
 
-    return bot.createMessage(msg.channel.id, {embed: {
-        color: bot.color,
+    return bot.send(msg, {
         title: `${command.cmd} command info`,
         fields: [
           {name: "description", value: commandInfo.description},
           {name: "arguments", value: commandInfo.args}
         ]
       }
-    });
+    );
   }
 
-  return bot.createMessage(msg.channel.id, {
-    embed: {
-      description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : ""}help [command name]\``,
-      color: bot.color,
-      fields: commandCategoryFields
-    }
-  }
-);
+  return bot.send(msg, {
+    description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : ""}help [command name]\``,
+    fields: commandCategoryFields
+  });
 };

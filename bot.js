@@ -24,6 +24,61 @@ bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg); }
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
+bot.send = function (msg, content){
+    let embed;
+
+    if (typeof content  === 'string'){
+        embed = {description: content};
+    }else{
+        embed = content;
+    }
+
+    embed.footer = {text: `${embed.footer ? embed.footer.text : `${msg.author.username}#${msg.author.discriminator} ${msg.content.split(" ")[0]} ${msg.content.split(" ")[1] || ""}`}`};
+    embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
+    embed.color = embed.color || bot.color;
+
+    msg.channel.createMessage({embed});
+}
+
+bot.commandDeny = function (msg, info){
+    let reason;
+    let specific;
+    let user;
+
+    if (typeof msg  === 'string'){
+        reason = info;
+    }else{
+        reason = info.reason;
+        user = info.user;
+        specific = info.perm;
+    }
+
+    switch(reason){
+        case "SERVER_ONLY":
+            break;
+        case "BOT_OWNLY":
+            break;
+        case "MISSING_PERM":
+            break;
+        default:
+            break;
+    }
+
+    bot.send(msg, "negatory");
+}
+
+bot.checkPerm = function (msg, perm){
+    if (!msg.channel.guild.members.get(msg.author.id).permission.has(perm)){
+        bot.commandDeny(msg, {reason: "MISSING_PERM", user: msg.author, perm});
+        return false;
+    }
+    if (!msg.channel.guild.members.get(bot.user.id).permission.has(perm)){
+        bot.commandDeny(msg, {reason: "MISSING_PERM", user: bot.user, perm});
+        return false;
+    }
+    return true;
+}
+
 bot.audit = function (dir = "./commands", cmds = {}){
     return new Promise((resolve, reject) => {
         fs.readdir(dir, {withFileTypes:true}, async (err, files) => {
@@ -108,12 +163,12 @@ bot.on("messageCreate", async (msg) => {
     let args = msg.content.slice(prefix.length + cmd.cmd.length).split(" ").slice(1);
 
     if (cmd.category === "bot owner" && msg.author.id !== bot.owner){
-        msg.channel.createMessage("negatory");
+        bot.commandDeny(msg, "OWNER_ONLY");
         return;
     }
 
     if (cmd.category === "guild" && !msg.channel.guild){
-        msg.channel.createMessage("negatory");
+        bot.commandDeny(msg, "SERVER_ONLY");
         return;
     }
 

@@ -4,6 +4,10 @@ exports.info = {
 };
 
 exports.run = async function (bot, msg, args) {
+  if (!bot.checkPerm(msg, "manageChannels")){
+    return;
+  }
+
   let nmsg = await bot.createMessage(msg.channel.id, {embed:
     {
       color: bot.color,
@@ -12,14 +16,16 @@ exports.run = async function (bot, msg, args) {
   });
 
   let failedChannels = [];
-  for (let channel of msg.channel.guild.channels){
-    let channelObj = channel[1];
+  for (let i of msg.channel.guild.channels){
+    let channel = i[1];
     
-    if (channelObj.type === 0){
+    console.log(channel.permissionsOf(bot.user.id))
+
+    if (channel.type === 0){
       try{
-        await channelObj.edit({name: channelObj.name});
+        await channel.edit({name: channel.name});
       }catch(err){
-        failedChannels.push(channelObj);
+        failedChannels.push(channel);
       }
     }
   }
