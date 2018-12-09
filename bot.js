@@ -20,7 +20,7 @@ bot.prefix = "k!";
 bot.defaultStatus = "online";
 bot.color = 46847;
 
-bot.on("warn", (msg) => { if (msg.includes("Authentication")) { log.warn(msg); } });
+bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
@@ -33,7 +33,9 @@ bot.send = function (msg, content){
         embed = content;
     }
 
-    embed.footer = {text: `${embed.footer ? embed.footer.text : `${msg.author.username}#${msg.author.discriminator} ${msg.content.split(" ")[0]} ${msg.content.split(" ")[1] || ""}`}`};
+    // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
+    embed.footer = `${msg.content.split(" ")[0]} ${msg.content.split(" ")[1] || ""}`
+    embed.footer = {text: `embed.footer`};
     embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
     embed.color = embed.color || bot.color;
 
@@ -60,6 +62,8 @@ bot.commandDeny = function (msg, info){
             break;
         case "MISSING_PERM":
             break;
+	case "CURRENTLY_RUNNING":
+	    break;
         default:
             break;
     }
@@ -128,14 +132,14 @@ bot.on("ready", async () => {
     await bot.audit();
 
     bot.isReady = true;
-    
+
     log.ready(bot);
 });
 
 bot.on("messageCreate", async (msg) => {
     if (!bot.isReady || !msg.author){
         return;
-    } 
+    }
 
     if (msg.author === bot.user){
         return;
@@ -149,14 +153,14 @@ bot.on("messageCreate", async (msg) => {
     }else{
         if (msg.channel.guild){
             return;
-        } 
+        }
         prefix = "";
     }
 
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
 
     if (!cmd){
-        msg.channel.createMessage(prefix + "help");
+        bot.send(msg, prefix + "help");
         return;
     }
 
@@ -177,15 +181,10 @@ bot.on("messageCreate", async (msg) => {
 
         if (msg.channel.guild){
             if (bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd]){
-                bot.createMessage(msg.channel.id, {embed:
-                    {
-                      color: bot.color,
-                      title: "Command currently running"
-                    }
-                  });
+                bot.commandDeny(msg, "CURRENTLY_RUNNING");
                 return;
             }
-            
+
             bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd] = true;
         }
 
@@ -194,12 +193,12 @@ bot.on("messageCreate", async (msg) => {
         if(err.message.includes("Cannot find module") || err.message.includes("ENOENT")){
             return;
         }
-        
+
         log.err(err.stack, bot.commands[cmd]);
         if(err.length > 2000){
             err = err.substring(0, err.length-(err.length-1991)) + "...";
         }
-        msg.channel.createMessage(`\`\`\`${err}\`\`\``);
+        bot.send(msg,`\`\`\`${err}\`\`\``);
     }
 
     if (msg.channel.guild){
