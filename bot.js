@@ -2,7 +2,7 @@ const secret = require("./data/secret.json");
 const Eris = require("eris");
 const bot = new Eris(secret.token);
 const fs = require("fs");
-const log = require("./modules/log.js");
+const log = require("./lib/log.js");
 
 process.on("SIGINT", () => { bot.save(); bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
 process.on("exit", (code) => { bot.save(); log.err(`Exited with code ${code}`, "Exit")});
@@ -14,7 +14,7 @@ bot.isReady = false;
 bot.log = log;
 bot.secret = secret;
 bot.owner = "115340880117891072";
-bot.guildSettingsDefault = {prefix: "k!", persist: {nick: true, roles: true}, memberCache: {}, flair: {}};
+bot.guildSettingsDefault = {prefix: "k!", persist: {nick: true, roles: true}, memberCache: {}};
 bot.guildSettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
@@ -23,8 +23,7 @@ bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
-bot.edit = function (msg, content){
-
+bot.content = function (content){
     let embed;
 
     if (typeof content  === 'string'){
@@ -39,28 +38,14 @@ bot.edit = function (msg, content){
     embed.footer = {text: embed.footer};
     embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
     embed.color = embed.color || bot.color;
+};
 
-    bot.editMessage (msg.channel.id, msg.id, {embed});
-}
+bot.edit = function (msg, content){
+    bot.editMessage (msg.channel.id, msg.id, bot.content(content));
+};
 
 bot.send = function (msg, content){
-
-    let embed;
-
-    if (typeof content  === 'string'){
-        embed = {description: content};
-    }else{
-        embed = content;
-    }
-
-    // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    //embed.footer = `${msg.content.split(" ")[0]}`
-    embed.footer = `${msg.content.split(" ")[1] || ""}`;
-    embed.footer = {text: embed.footer};
-    embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
-    embed.color = embed.color || bot.color;
-
-    bot.createMessage(msg.channel.id, {embed});
+    bot.createMessage(msg.channel.id, bot.content(content));
 };
 
 bot.commandDeny = function (msg, info){
@@ -161,6 +146,17 @@ bot.save = function (){
 
 bot.on("ready", async () => {
     
+    fs.readdir("./modules", {withFileTypes:true}, async (err, files) => {
+        for (let i in files){
+            let file = files[i];
+            if (!file.isDirectory()){
+                require("./modules/"+file.name)(bot);
+                log.log(`${file.name}`, "Module loaded:");
+            }
+        }
+    });
+
+
     bot.guilds.forEach((guild) => {
 
         guild.cmdsrunning = {};
@@ -176,36 +172,6 @@ bot.on("ready", async () => {
     bot.isReady = true;
 
     log.ready(bot);
-});
-
-let cacheMember = function(guild, member){
-
-    if (member.bot){
-        return;
-    }
-
-    guild.settings.memberCache[member.id] = {nick: member.nick, roles: member.roles};
-}
-
-bot.on("guildMemberRemove", cacheMember);
-bot.on("guildMemberUpdate", cacheMember);
-
-bot.on("guildMemberAdd", (guild, member)=>{
-
-    if (member.bot){
-        return;
-    }
-
-    let memberCache = guild.settings.memberCache[member.id];
-
-    if(memberCache){
-        try{
-            member.edit({
-                roles: memberCache.roles,
-                nick: memberCache.nick
-            }, "Persist");
-        }catch(err){}
-    }
 });
 
 bot.on("messageCreate", async (msg) => {
