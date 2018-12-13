@@ -23,7 +23,7 @@ bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
-bot.content = function (content){
+bot.embed = function (msg, content){
     let embed;
 
     if (typeof content  === 'string'){
@@ -33,19 +33,21 @@ bot.content = function (content){
     }
 
     // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    //embed.footer = `${msg.content.split(" ")[0]}`
+    // embed.footer = `${msg.content.split(" ")[0]}`
     embed.footer = `${msg.content.split(" ")[1] || ""}`;
     embed.footer = {text: embed.footer};
     embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
     embed.color = embed.color || bot.color;
+    
+    return {embed};
 };
 
 bot.edit = function (msg, content){
-    bot.editMessage (msg.channel.id, msg.id, bot.content(content));
+    bot.editMessage (msg.channel.id, msg.id, bot.embed(msg, content));
 };
 
 bot.send = function (msg, content){
-    bot.createMessage(msg.channel.id, bot.content(content));
+    bot.createMessage(msg.channel.id, bot.embed(msg, content));
 };
 
 bot.commandDeny = function (msg, info){
@@ -147,15 +149,16 @@ bot.save = function (){
 bot.on("ready", async () => {
     
     fs.readdir("./modules", {withFileTypes:true}, async (err, files) => {
+
         for (let i in files){
             let file = files[i];
+
             if (!file.isDirectory()){
                 require("./modules/"+file.name)(bot);
                 log.log(`${file.name}`, "Module loaded:");
             }
         }
     });
-
 
     bot.guilds.forEach((guild) => {
 
@@ -188,50 +191,44 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    let guild;
-
-    if (msg.channel.guild){
-        guild = msg.channel.guild;
-    }
-
     let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? guild.settings.prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
+    prefix = prefix ? prefix[0] : "";
 
-    if (prefix !== null){
-        prefix = prefix[0];
-    }else{
-        if (guild){
-            return;
-        }
-        prefix = "";
+    let guild = msg.channel.guild ? msg.channel.guild : undefined;
+
+    if (guild && !prefix){
+        return;
     }
 
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
+    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
+    // if command doesnt exist/isnt found
     if (!cmd){
         bot.send(msg, prefix + "help");
         return;
     }
 
-    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
-
+    // if command is bot owner only
     if (cmd.category === "bot owner" && msg.author.id !== bot.owner){
         bot.commandDeny(msg, "OWNER_ONLY");
         return;
     }
 
-    if (cmd.category === "guild" && !guild){
-        bot.commandDeny(msg, "SERVER_ONLY");
-        return;
-    }
-
     if (guild){
+        // if command is currently being processed
         if (guild.cmdsrunning[cmd.name]){
             bot.commandDeny(msg, "CURRENTLY_RUNNING");
             return;
         }
 
         guild.cmdsrunning[cmd.name] = true;
+    
+    // if command is guild only
+    }else if (cmd.category === "guild"){
+        bot.commandDeny(msg, "SERVER_ONLY");
+        return;
     }
 
     log.cmd(msg, bot);
