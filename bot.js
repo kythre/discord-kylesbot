@@ -3,20 +3,19 @@ const Eris = require("eris");
 const bot = new Eris(secret.token);
 const fs = require("fs");
 const log = require("./modules/log.js");
-const guildSettings = require("./data/guilds.json");
 
-process.on("SIGINT", () => { bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
-process.on("exit", (code) => log.err(`Exited with code ${code}`, "Exit"));
+process.on("SIGINT", () => { bot.save(); bot.disconnect({reconnect: false}); setTimeout(() => process.exit(0), 1000); });
+process.on("exit", (code) => { bot.save(); log.err(`Exited with code ${code}`, "Exit")});
 process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
 process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 
 bot.commands = {};
-bot.guildSettings = guildSettings;
 bot.isReady = false;
 bot.log = log;
 bot.secret = secret;
 bot.owner = "115340880117891072";
-bot.prefix = "k!";
+bot.guildSettingsDefault = {prefix: "k!", persist: {nick: true, roles: true}, memberCache: {}, flair: {}};
+bot.guildSettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
 
@@ -25,6 +24,7 @@ bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
 bot.send = function (msg, content){
+
     let embed;
 
     if (typeof content  === 'string'){
@@ -34,15 +34,17 @@ bot.send = function (msg, content){
     }
 
     // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    embed.footer = `${msg.content.split(" ")[0]} ${msg.content.split(" ")[1] || ""}`
-    embed.footer = {text: `embed.footer`};
+    //embed.footer = `${msg.content.split(" ")[0]}`
+    embed.footer = `${msg.content.split(" ")[1] || ""}`
+    embed.footer = {text: embed.footer};
     embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
     embed.color = embed.color || bot.color;
 
     msg.channel.createMessage({embed});
-}
+};
 
 bot.commandDeny = function (msg, info){
+
     let reason;
     let specific;
     let user;
@@ -69,21 +71,10 @@ bot.commandDeny = function (msg, info){
     }
 
     bot.send(msg, "negatory");
-}
-
-bot.checkPerm = function (msg, perm){
-    if (!msg.channel.guild.members.get(msg.author.id).permission.has(perm)){
-        bot.commandDeny(msg, {reason: "MISSING_PERM", user: msg.author, perm});
-        return false;
-    }
-    if (!msg.channel.guild.members.get(bot.user.id).permission.has(perm)){
-        bot.commandDeny(msg, {reason: "MISSING_PERM", user: bot.user, perm});
-        return false;
-    }
-    return true;
-}
+};
 
 bot.audit = function (dir = "./commands", cmds = {}){
+
     return new Promise((resolve, reject) => {
         fs.readdir(dir, {withFileTypes:true}, async (err, files) => {
             if(err){
@@ -107,7 +98,7 @@ bot.audit = function (dir = "./commands", cmds = {}){
                             let category = path.match(/[^//]+(?=\/)/g)[2] || "misc";
 
                             cmds[cmd] = {
-                                cmd,
+                                name: cmd,
                                 path,
                                 category
                             };
@@ -123,10 +114,41 @@ bot.audit = function (dir = "./commands", cmds = {}){
     });
 };
 
+bot.checkPerm = function (msg, perm){
+
+    if (!msg.channel.guild.members.get(msg.author.id).permission.has(perm)){
+        bot.commandDeny(msg, {reason: "MISSING_PERM", user: msg.author, perm});
+        return false;
+    }
+    if (!msg.channel.guild.members.get(bot.user.id).permission.has(perm)){
+        bot.commandDeny(msg, {reason: "MISSING_PERM", user: bot.user, perm});
+        return false;
+    }
+    return true;
+};
+
+bot.save = function (){
+
+    return new Promise((resolve, reject) => {
+
+        let json = JSON.stringify(bot.guildSettings, null, 4);
+
+        fs.writeFile('./data/guilds.json', json, 'utf8', ()=>{
+            resolve();
+        });
+    });
+};
+
 bot.on("ready", async () => {
-    bot.guilds.forEach((g) => {
-        g.cmdsrunning = {};
-        g.settings = {prefix: bot.prefix};
+    
+    bot.guilds.forEach((guild) => {
+
+        guild.cmdsrunning = {};
+        guild.settings = bot.guildSettings[guild.id];
+
+        for(let i in bot.guildSettingsDefault){
+            guild.settings[i] = guild.settings[i] || bot.guildSettingsDefault[i];
+        }
     });
 
     await bot.audit();
@@ -136,7 +158,38 @@ bot.on("ready", async () => {
     log.ready(bot);
 });
 
+let cacheMember = function(guild, member){
+
+    if (member.bot){
+        return;
+    }
+
+    guild.settings.memberCache[member.id] = {nick: member.nick, roles: member.roles};
+}
+
+bot.on("guildMemberRemove", cacheMember);
+bot.on("guildMemberUpdate", cacheMember);
+
+bot.on("guildMemberAdd", (guild, member)=>{
+
+    if (member.bot){
+        return;
+    }
+
+    let memberCache = guild.settings.memberCache[member.id];
+
+    if(memberCache){
+        try{
+            member.edit({
+                roles: memberCache.roles,
+                nick: memberCache.nick
+            }, "Persist");
+        }catch(err){}
+    }
+});
+
 bot.on("messageCreate", async (msg) => {
+
     if (!bot.isReady || !msg.author){
         return;
     }
@@ -145,13 +198,23 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : bot.prefix}))\\s?`, "gi");
+    if (msg.author.bot){
+        return;
+    }
+
+    let guild;
+
+    if (msg.channel.guild){
+        guild = msg.channel.guild;
+    }
+
+    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? guild.settings.prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
 
     if (prefix !== null){
         prefix = prefix[0];
     }else{
-        if (msg.channel.guild){
+        if (guild){
             return;
         }
         prefix = "";
@@ -164,45 +227,49 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    let args = msg.content.slice(prefix.length + cmd.cmd.length).split(" ").slice(1);
+    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
     if (cmd.category === "bot owner" && msg.author.id !== bot.owner){
         bot.commandDeny(msg, "OWNER_ONLY");
         return;
     }
 
-    if (cmd.category === "guild" && !msg.channel.guild){
+    if (cmd.category === "guild" && !guild){
         bot.commandDeny(msg, "SERVER_ONLY");
         return;
     }
 
-    try {
-        log.cmd(msg, bot);
-
-        if (msg.channel.guild){
-            if (bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd]){
-                bot.commandDeny(msg, "CURRENTLY_RUNNING");
-                return;
-            }
-
-            bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd] = true;
+    if (guild){
+        if (guild.cmdsrunning[cmd.name]){
+            bot.commandDeny(msg, "CURRENTLY_RUNNING");
+            return;
         }
 
+        guild.cmdsrunning[cmd.name] = true;
+    }
+
+    log.cmd(msg, bot);
+
+    try {
         await require(cmd.path).run(bot, msg, args);
+
     } catch (err) {
+        
         if(err.message.includes("Cannot find module") || err.message.includes("ENOENT")){
             return;
         }
 
         log.err(err.stack, bot.commands[cmd]);
+
         if(err.length > 2000){
             err = err.substring(0, err.length-(err.length-1991)) + "...";
         }
+
         bot.send(msg,`\`\`\`${err}\`\`\``);
     }
 
-    if (msg.channel.guild){
-        bot.guilds.get(msg.channel.guild.id).cmdsrunning[cmd.cmd] = false;
+    if (guild){
+        guild.cmdsrunning[cmd.name] = false;
     }
 
     try {

@@ -13,14 +13,14 @@ exports.run = (bot, msg, args) => {
   let commandCategoryField = {};
 
   for(let i in bot.commands){    
-    let command = bot.commands[i];
+    let cmd = bot.commands[i];
 
-    commandCategoryField[command.category] = commandCategoryField[command.category] || {
-      name: command.category,
+    commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
+      name: cmd.category,
       value: ""
     };
 
-    commandCategoryField[command.category].value  += " `" + command.cmd + "`";
+    commandCategoryField[cmd.category].value  += " `" + cmd.name + "`";
   }
 
   for (let i in commandCategoryField){
@@ -28,23 +28,23 @@ exports.run = (bot, msg, args) => {
   }
 
   if (args[0]) {
-    let command = bot.commands[args[0]];
+    let cmd = bot.commands[args[0]];
 
-    if (!command){
+    if (!cmd){
       return msg.channel.createMessage("what?");
     }
 
     let commandInfo;
 
     try {
-        commandInfo = require("../"+command.path).info;
-        delete require.cache[require.resolve("../"+command.path)];
+        commandInfo = require("../"+cmd.path).info;
+        delete require.cache[require.resolve("../"+cmd.path)];
     }catch(err){
         return bot.log.err(err);
     }
 
     return bot.send(msg, {
-        title: `${command.cmd} command info`,
+        title: `${cmd.name} command info`,
         fields: [
           {name: "description", value: commandInfo.description},
           {name: "arguments", value: commandInfo.args}
