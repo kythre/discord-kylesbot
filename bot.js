@@ -23,6 +23,26 @@ bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
 
+bot.edit = function (msg, content){
+
+    let embed;
+
+    if (typeof content  === 'string'){
+        embed = {description: content};
+    }else{
+        embed = content;
+    }
+
+    // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
+    //embed.footer = `${msg.content.split(" ")[0]}`
+    embed.footer = `${msg.content.split(" ")[1] || ""}`;
+    embed.footer = {text: embed.footer};
+    embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
+    embed.color = embed.color || bot.color;
+
+    bot.editMessage (msg.channel.id, msg.id, {embed});
+}
+
 bot.send = function (msg, content){
 
     let embed;
@@ -35,12 +55,12 @@ bot.send = function (msg, content){
 
     // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
     //embed.footer = `${msg.content.split(" ")[0]}`
-    embed.footer = `${msg.content.split(" ")[1] || ""}`
+    embed.footer = `${msg.content.split(" ")[1] || ""}`;
     embed.footer = {text: embed.footer};
     embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
     embed.color = embed.color || bot.color;
 
-    msg.channel.createMessage({embed});
+    bot.createMessage(msg.channel.id, {embed});
 };
 
 bot.commandDeny = function (msg, info){
@@ -49,7 +69,7 @@ bot.commandDeny = function (msg, info){
     let specific;
     let user;
 
-    if (typeof msg  === 'string'){
+    if (typeof msg  === "string"){
         reason = info;
     }else{
         reason = info.reason;
