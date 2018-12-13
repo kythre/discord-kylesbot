@@ -13,13 +13,14 @@ process.on("SIGINT", () => {
 });
 process.on("exit", (code) => {
     bot.save();
-    log.err(`Exited with code ${code}`, "Exit")
+    log.err(`Exited with code ${code}`, "Exit");
 });
 process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
 process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 
 bot.commands = {};
 bot.isReady = false;
+bot.eval = eval;
 bot.log = log;
 bot.secret = secret;
 bot.owner = "115340880117891072";
@@ -51,8 +52,7 @@ bot.embed = function (msg, content) {
     }
 
     // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    // embed.footer = `${msg.content.split(" ")[0]}`
-    embed.footer = `${msg.content.split(" ")[1] || ""}`;
+    embed.footer = msg.cmd.name;
     embed.footer = {
         text: embed.footer
     };
@@ -174,6 +174,8 @@ bot.save = function () {
 
         fs.writeFile("./data/guilds.json", json, "utf8", () => {
             resolve();
+        }).catch(() => {
+            reject();
         });
     });
 };
@@ -225,17 +227,17 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
+    let guild = msg.channel.guild ? msg.channel.guild : "";
     let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? guild.settings.prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
-
-    let guild = msg.channel.guild ? msg.channel.guild : undefined;
 
     if (guild && !prefix) {
         return;
     }
 
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
+    msg.cmd = cmd;
     let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
     // if command doesnt exist/isnt found

@@ -1,5 +1,5 @@
 /**
- * Audits commands (Owner only).
+ * audits commands (Owner only).
  */
 exports.info = {
   usage: "audit",

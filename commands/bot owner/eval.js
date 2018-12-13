@@ -1,5 +1,5 @@
 /**
- * Evaluates code remotely (Owner only).
+ * evaluates code remotely (Owner only).
  * @param {string} i The code to eval
  * @return {string} The output of the eval function.
  */
@@ -16,7 +16,7 @@ exports.run = function (bot, msg, args) {
   let evaled;
 
   try {
-    evaled = eval(input);
+    evaled = bot.eval(input);
   } catch (err) {
     evaled = err;
   }
@@ -35,7 +35,8 @@ exports.run = function (bot, msg, args) {
 
   return bot.send(msg, {
     color: bot.color,
-    fields: [{
+    fields: [
+      {
         name: "Input:",
         value: `\`\`\`js\n${input}\`\`\``,
         inline: false

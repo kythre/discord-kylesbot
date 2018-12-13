@@ -1,5 +1,5 @@
 /**
- * Gives information on the bot's commands.
+ * gives information on the bot's commands.
  * @param {string} [args = null] The name of a command, for more info on that specific command.
  */
 
@@ -45,7 +45,8 @@ exports.run = (bot, msg, args) => {
 
     return bot.send(msg, {
       title: `${cmd.name} command info`,
-      fields: [{
+      fields: [
+        {
           name: "description",
           value: commandInfo.description
         },

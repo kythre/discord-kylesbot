@@ -31,13 +31,13 @@ exports.run = async function (bot, msg, args) {
     scrubedFlair = scrubedFlair.replace(/^-/gu, "");
 
     return scrubedFlair;
-  }
+  };
 
   if (args[0]) {
 
     preFlair = scrubFlair(args[0]);
 
-    if (postFlair !== undefined) {
+    if (postFlair) {
       postFlair = scrubFlair(args[1]);
     } else {
       postFlair = "";
@@ -45,11 +45,13 @@ exports.run = async function (bot, msg, args) {
 
     if (preFlair.length > 0) {
       bot.edit(nmsg, {
-        fields: [{
-          name: "Adding flair:",
-          value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
-          inline: false
-        }]
+        fields: [
+            {
+            name: "Adding flair:",
+            value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
+            inline: false
+          }
+        ]
       });
 
       for (let i of msg.channel.guild.channels) {
@@ -57,13 +59,9 @@ exports.run = async function (bot, msg, args) {
         let newname = preFlair + channel.name + postFlair;
 
         if (channel.type === 0) {
-          try {
-            await channel.edit({
-              name: newname
-            }, "Channel flair");
-          } catch (err) {
-            console.log(err);
-          }
+          await channel.edit({
+            name: newname
+          }, "Channel flair");
         }
       }
     }
@@ -76,7 +74,7 @@ exports.run = async function (bot, msg, args) {
         // look for prefix flair
         preFlair = preFlair || channel.name;
 
-        for (let i = 0; i < channel.name.length; i++) {
+        for (let i = 0; i < channel.name.length; i += 1) {
           if (channel.name.charAt(i) !== preFlair.charAt(i)) {
             preFlair = preFlair.substring(0, i);
           }
@@ -87,7 +85,7 @@ exports.run = async function (bot, msg, args) {
 
         postFlair = postFlair || channelNameRev;
 
-        for (let i = 0; i < channelNameRev.length; i++) {
+        for (let i = 0; i < channelNameRev.length; i += 1) {
           if (channelNameRev.charAt(i) !== postFlair.charAt(i)) {
             postFlair = postFlair.substring(0, i);
           }
@@ -97,15 +95,17 @@ exports.run = async function (bot, msg, args) {
       }
     });
 
-    // Remove prefix flair
+    // remove prefix flair
     if (preFlair.length > 0 || postFlair.length > 0) {
 
       bot.edit(nmsg, {
-        fields: [{
-          name: "Removing flair",
-          value: `\`\`\`${preFlair},${postFlair}\`\`\``,
-          inline: false
-        }]
+        fields: [
+            {
+            name: "Removing flair",
+            value: `\`\`\`${preFlair},${postFlair}\`\`\``,
+            inline: false
+          }
+        ]
       });
 
       for (let i of msg.channel.guild.channels) {
@@ -121,23 +121,21 @@ exports.run = async function (bot, msg, args) {
         }
 
         if (channel.type === 0) {
-          try {
-            await channel.edit({
-              name: newname
-            }, "Channel flair");
-          } catch (err) {
-            console.log(err);
-          }
+          await channel.edit({
+            name: newname
+          }, "Channel flair");
         }
       }
     }
   }
 
-  return bot.edit(nmsg, {
-    fields: [{
-      name: "Done",
-      value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
-      inline: false
-    }]
+  bot.edit(nmsg, {
+    fields: [
+        {
+        name: "Done",
+        value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
+        inline: false
+      }
+    ]
   });
 };

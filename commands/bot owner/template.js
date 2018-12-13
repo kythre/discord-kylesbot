@@ -5,5 +5,4 @@ exports.info = {
 
 exports.run = async function (bot, msg, args) {
   bot.send(msg, "aaaaAAAAAAAAAAA " + args.join(" "));
-  return;
 };
