@@ -17,7 +17,6 @@ exports.run = async function (bot, msg, args) {
     }
   });
 
-  // let failedChannels = [];
   let preFlair = "";
   let postFlair = "";
 
@@ -64,7 +63,6 @@ exports.run = async function (bot, msg, args) {
             await channel.edit({name: newname}, "Channel flair");
           }catch(err){
             console.log(err);
-            // failedChannels.push(channel);
           }
         }
       }
@@ -126,21 +124,14 @@ exports.run = async function (bot, msg, args) {
 
         if (channel.type === 0){
           try{
-            //await channel.edit({name: newname}, "Channel flair");
-            console.log(newname)
+            await channel.edit({name: newname}, "Channel flair");
           }catch(err){
             console.log(err);
-            failedChannels.push(channel);
           }
         }
       }
     }
   }
-
-/*   let channelsFailedString = "";
-  for (let channel of failedChannels){
-    channelsFailedString = channelsFailedString + "\n" + channel.name;
-  } */
 
   return bot.edit (nmsg, {
     fields: [
