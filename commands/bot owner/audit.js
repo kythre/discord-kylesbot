@@ -1,6 +1,6 @@
 /**
-* Audits commands (Owner only).
-*/
+ * Audits commands (Owner only).
+ */
 exports.info = {
   usage: "audit",
   args: "none",

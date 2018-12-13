@@ -1,6 +1,6 @@
 /**
-* Saves data (Owner only).
-*/
+ * Saves data (Owner only).
+ */
 exports.info = {
   usage: "save",
   args: "none",
