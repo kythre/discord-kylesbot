@@ -98,13 +98,14 @@ bot.on("messageCreate", async (msg) => {
 
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
     msg.cmd = cmd;
-    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
     // if command doesnt exist/isnt found
     if (!cmd) {
         bot.send(msg, prefix + "help");
         return;
     }
+
+    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
     // if command is bot owner only
     if (cmd.category === "bot owner" && msg.author.id !== bot.owner) {
