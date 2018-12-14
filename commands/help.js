@@ -1,4 +1,7 @@
 module.exports = (bot) => {
+
+  let commandCategoryFields = [];
+
   bot.registerCommand({
     name: "help",
     category: "misc",
@@ -7,22 +10,25 @@ module.exports = (bot) => {
       description: "help"
     },
     generator: (msg, args) => {
-      let commandCategoryFields = [];
-      let commandCategoryField = {};
 
-      for (let i in bot.commands) {
-        let cmd = bot.commands[i];
+      // gross
+      if (commandCategoryFields.length === 0) {
+        let commandCategoryField = {};
 
-        commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
-          name: cmd.category,
-          value: ""
-        };
+        for (let i in bot.commands) {
+          let cmd = bot.commands[i];
 
-        commandCategoryField[cmd.category].value += " `" + cmd.name + "`";
-      }
+          commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
+            name: cmd.category,
+            value: ""
+          };
 
-      for (let i in commandCategoryField) {
-        commandCategoryFields.push(commandCategoryField[i]);
+          commandCategoryField[cmd.category].value += " `" + cmd.name + "`";
+        }
+
+        for (let i in commandCategoryField) {
+          commandCategoryFields.push(commandCategoryField[i]);
+        }
       }
 
       if (args[0]) {
