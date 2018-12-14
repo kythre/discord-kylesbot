@@ -14,9 +14,14 @@ module.exports = (bot) => {
         evaled = eval(input);
       } catch (err) {
         evaled = err;
+        delete evaled.stack;
       }
 
-      evaled = require("util").inspect(evaled);
+      evaled = require("util").inspect(evaled, {
+        depth: 0,
+        sorted: true,
+        breakLength: 100
+      });
 
       evaled.replace(/`/g, "`" + String.fromCharCode(8203));
 
