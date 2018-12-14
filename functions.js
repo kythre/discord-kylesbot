@@ -98,7 +98,7 @@ module.exports = (bot) => {
     }
 
     // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    embed.footer = msg.cmd.name;
+    embed.footer = msg.cmd ? msg.cmd.name : msg.content.split(" ")[0];
     embed.footer = {
       text: embed.footer
     };
@@ -136,6 +136,6 @@ module.exports = (bot) => {
   };
 
   bot.send = function (msg, content) {
-    bot.createMessage(msg.channel.id, bot.embed(msg, content));
+    return bot.createMessage(msg.channel.id, bot.embed(msg, content));
   };
 };
