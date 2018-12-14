@@ -3,6 +3,7 @@ const Eris = require("eris");
 const bot = new Eris(secret.token);
 const fs = require("fs");
 const log = require("./lib/log.js");
+require("./functions.js")(bot);
 
 process.on("SIGINT", () => {
     bot.save();
@@ -20,7 +21,6 @@ process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 
 bot.commands = {};
 bot.isReady = false;
-bot.eval = eval;
 bot.log = log;
 bot.secret = secret;
 bot.owner = "115340880117891072";
@@ -39,146 +39,6 @@ bot.color = 46847;
 bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
 bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
-
-bot.embed = function (msg, content) {
-    let embed;
-
-    if (typeof content === "string") {
-        embed = {
-            description: content
-        };
-    } else {
-        embed = content;
-    }
-
-    // embed.footer = `${msg.author.username}#${msg.author.discriminator}`
-    embed.footer = msg.cmd.name;
-    embed.footer = {
-        text: embed.footer
-    };
-    embed.timestamp = embed.timestamp || new Date(msg.timestamp).toISOString();
-    embed.color = embed.color || bot.color;
-
-    return {
-        embed
-    };
-};
-
-bot.edit = function (msg, content) {
-    bot.editMessage(msg.channel.id, msg.id, bot.embed(msg, content));
-};
-
-bot.send = function (msg, content) {
-    bot.createMessage(msg.channel.id, bot.embed(msg, content));
-};
-
-bot.commandDeny = function (msg, info) {
-
-    let reason;
-    let specific;
-    let user;
-
-    if (typeof msg === "string") {
-        reason = info;
-    } else {
-        reason = info.reason;
-        user = info.user;
-        specific = info.perm;
-    }
-
-    switch (reason) {
-        case "SERVER_ONLY":
-            break;
-        case "BOT_OWNLY":
-            break;
-        case "MISSING_PERM":
-            break;
-        case "CURRENTLY_RUNNING":
-            break;
-        default:
-            break;
-    }
-
-    bot.send(msg, "negatory");
-};
-
-bot.audit = function (dir = "./commands", cmds = {}) {
-
-    return new Promise((resolve, reject) => {
-        fs.readdir(dir, {
-            withFileTypes: true
-        }, async (err, files) => {
-            if (err) {
-                reject();
-            }
-
-            for (let i in files) {
-                let file = files[i];
-                let path = `${dir}/${file.name}`;
-
-                if (file.isDirectory()) {
-                    await bot.audit(path, cmds);
-                } else {
-                    let regexJSFile = /(\.js)$/gi;
-                    if (file.name.match(regexJSFile)) {
-                        let cmd = file.name.replace(regexJSFile, "");
-
-                        if (cmds[cmd]) {
-                            log.warn(`Duplicate command found: ${file.name} ${path}`);
-                        } else {
-                            let category = path.match(/[^//]+(?=\/)/g)[2] || "misc";
-
-                            cmds[cmd] = {
-                                name: cmd,
-                                path,
-                                category
-                            };
-
-                            log.log(`${file.name} ${path}`, "Command registered:");
-                        }
-                    }
-                }
-            }
-            bot.commands = cmds;
-            resolve();
-        });
-    });
-};
-
-bot.checkPerm = function (msg, perm) {
-
-    if (!msg.channel.guild.members.get(msg.author.id).permission.has(perm)) {
-        bot.commandDeny(msg, {
-            reason: "MISSING_PERM",
-            user: msg.author,
-            perm
-        });
-        return false;
-    }
-    if (!msg.channel.guild.members.get(bot.user.id).permission.has(perm)) {
-        bot.commandDeny(msg, {
-            reason: "MISSING_PERM",
-            user: bot.user,
-            perm
-        });
-        return false;
-    }
-    return true;
-};
-
-bot.save = function () {
-
-    return new Promise((resolve, reject) => {
-
-        let json = JSON.stringify(bot.guildSettings, null, 4);
-
-        fs.writeFile("./data/guilds.json", json, "utf8", () => {
-            resolve();
-        }).catch(() => {
-            reject();
-        });
-    });
-};
 
 bot.on("ready", async () => {
 
@@ -270,14 +130,8 @@ bot.on("messageCreate", async (msg) => {
     log.cmd(msg, bot);
 
     try {
-        await require(cmd.path).run(bot, msg, args);
-
+        await cmd.generator(msg, args);
     } catch (err) {
-
-        if (err.message.includes("Cannot find module") || err.message.includes("ENOENT")) {
-            return;
-        }
-
         log.err(err.stack, bot.commands[cmd]);
 
         if (err.length > 2000) {
@@ -289,12 +143,6 @@ bot.on("messageCreate", async (msg) => {
 
     if (guild) {
         guild.cmdsrunning[cmd.name] = false;
-    }
-
-    try {
-        delete require.cache[require.resolve(cmd.path)];
-    } catch (err) {
-        log.err(err.stack, "youre fucking stupid");
     }
 });
 

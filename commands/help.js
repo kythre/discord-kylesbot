@@ -1,65 +1,56 @@
-/**
- * gives information on the bot's commands.
- * @param {string} [args = null] The name of a command, for more info on that specific command.
- */
+module.exports = (bot) => {
+  bot.registerCommand({
+    name: "help",
+    category: "misc",
+    info: {
+      args: "[command]",
+      description: "help"
+    },
+    generator: (msg, args) => {
+      let commandCategoryFields = [];
+      let commandCategoryField = {};
 
-exports.info = {
-  args: "[command name]",
-  description: "help"
-};
+      for (let i in bot.commands) {
+        let cmd = bot.commands[i];
 
-exports.run = (bot, msg, args) => {
-  let commandCategoryFields = [];
-  let commandCategoryField = {};
+        commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
+          name: cmd.category,
+          value: ""
+        };
 
-  for (let i in bot.commands) {
-    let cmd = bot.commands[i];
+        commandCategoryField[cmd.category].value += " `" + cmd.name + "`";
+      }
 
-    commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
-      name: cmd.category,
-      value: ""
-    };
+      for (let i in commandCategoryField) {
+        commandCategoryFields.push(commandCategoryField[i]);
+      }
 
-    commandCategoryField[cmd.category].value += " `" + cmd.name + "`";
-  }
+      if (args[0]) {
+        let cmd = bot.commands[args[0]];
 
-  for (let i in commandCategoryField) {
-    commandCategoryFields.push(commandCategoryField[i]);
-  }
-
-  if (args[0]) {
-    let cmd = bot.commands[args[0]];
-
-    if (!cmd) {
-      return msg.channel.createMessage("what?");
-    }
-
-    let commandInfo;
-
-    try {
-      commandInfo = require("../" + cmd.path).info;
-      delete require.cache[require.resolve("../" + cmd.path)];
-    } catch (err) {
-      return bot.log.err(err);
-    }
-
-    return bot.send(msg, {
-      title: `${cmd.name} command info`,
-      fields: [
-        {
-          name: "description",
-          value: commandInfo.description
-        },
-        {
-          name: "arguments",
-          value: commandInfo.args
+        if (!cmd) {
+          return msg.channel.createMessage("what?");
         }
-      ]
-    });
-  }
 
-  return bot.send(msg, {
-    description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : ""}help [command name]\``,
-    fields: commandCategoryFields
+        return bot.send(msg, {
+          title: `${cmd.name} command info`,
+          fields: [
+            {
+              name: "description",
+              value: cmd.info.description
+            },
+            {
+              name: "arguments",
+              value: cmd.info.args
+            }
+          ]
+        });
+      }
+
+      return bot.send(msg, {
+        description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guilds.get(msg.channel.guild.id).settings.prefix : ""}help [command name]\``,
+        fields: commandCategoryFields
+      });
+    }
   });
 };
