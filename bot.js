@@ -3,7 +3,11 @@ const Eris = require("eris");
 const bot = new Eris(secret.token);
 const fs = require("fs");
 const log = require("./lib/log.js");
-require("./functions.js")(bot);
+const _ = require("lodash");
+
+require("./lib/message.js")(bot);
+require("./lib/file.js")(bot);
+require("./lib/commands.js")(bot);
 
 process.on("SIGINT", () => {
     bot.save();
@@ -22,13 +26,15 @@ process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
 bot.commands = {};
 bot.isReady = false;
 bot.log = log;
+bot.fs = fs;
+bot._ = _;
 bot.secret = secret;
 bot.owner = "115340880117891072";
 bot.guildSettingsDefault = {
     prefix: "k!",
     persist: {
-        nick: true,
-        roles: true
+        nick: false,
+        roles: false
     },
     memberCache: {}
 };
@@ -59,10 +65,10 @@ bot.on("ready", async () => {
     bot.guilds.forEach((guild) => {
 
         guild.cmdsrunning = {};
-        guild.settings = bot.guildSettings[guild.id];
+        bot.guildSettings[guild.id] = bot.guildSettings[guild.id];
 
         for (let i in bot.guildSettingsDefault) {
-            guild.settings[i] = guild.settings[i] || bot.guildSettingsDefault[i];
+            bot.guildSettings[guild.id] = bot.guildSettings[guild.id] || bot.guildSettingsDefault[i];
         }
     });
 
@@ -88,7 +94,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     let guild = msg.channel.guild ? msg.channel.guild : "";
-    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? guild.settings.prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
+    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? bot.guildSettings[guild.id].prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 
@@ -135,11 +141,13 @@ bot.on("messageCreate", async (msg) => {
     } catch (err) {
         log.err(err.stack, bot.commands[cmd]);
 
-        if (err.length > 2000) {
-            err = err.substring(0, err.length - (err.length - 1991)) + "...";
+        let errr = err;
+
+        if (errr.length > 2000) {
+            errr = errr.substring(0, errr.length - (errr.length - 1991)) + "...";
         }
 
-        bot.send(msg, `\`\`\`${err}\`\`\``);
+        bot.send(msg, `\`\`\`${errr}\`\`\``);
     }
 
     if (guild) {

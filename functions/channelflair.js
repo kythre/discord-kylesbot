@@ -9,7 +9,6 @@ module.exports = (bot) => {
     generator: async (msg, args) => {
 
       if (!bot.checkPerm(msg, "manageChannels")) {
-        bot.commandDeny(msg, "MISSING_PERM");
         return;
       }
 
