@@ -1,4 +1,6 @@
 module.exports = (bot) => {
+  const util = require("util");
+
   bot.registerCommand({
     name: "eval",
     category: "bot owner",
@@ -17,7 +19,7 @@ module.exports = (bot) => {
         delete evaled.stack;
       }
 
-      evaled = require("util").inspect(evaled, {
+      evaled = util.inspect(evaled, {
         depth: 0,
         sorted: true,
         breakLength: 100
@@ -48,6 +50,46 @@ module.exports = (bot) => {
           }
         ]
       });
+    }
+  });
+
+  bot.registerCommand({
+    name: "save",
+    category: "bot owner",
+    info: {
+      args: "none",
+      description: "saves data"
+    },
+    generator: async (msg) => {
+      await bot.save();
+      bot.send(msg, "done");
+    }
+  });
+
+  bot.registerCommand({
+    name: "audit",
+    category: "bot owner",
+    info: {
+      args: "none",
+      description: "audits all command files"
+    },
+    generator: async (msg) => {
+      bot.commands = {};
+      bot.commandsOrganized = {};
+      await bot.audit();
+      bot.send(msg, "done");
+    }
+  });
+
+  bot.registerCommand({
+    name: "settings",
+    category: "bot owner",
+    info: {
+      args: "none",
+      description: "echos guild settings"
+    },
+    generator: async (msg) => {
+      bot.send(msg, "```js\n" + util.inspect(bot.guildSettings[msg.channel.guild.id]) + "```");
     }
   });
 };
