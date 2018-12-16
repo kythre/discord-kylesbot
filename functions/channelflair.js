@@ -12,45 +12,39 @@ module.exports = (bot) => {
         return;
       }
 
-      let nmsg = await bot.createMessage(msg.channel.id, {
-        embed: {
-          color: bot.color,
-          title: "Rodger"
-        }
-      });
+      let nmsg = await bot.send(msg, "Rodger");
 
-      let preFlair = "";
-      let postFlair = "";
-
-      let scrubFlair = function (flair) {
-        let regexIllegalChars = /!|@|#|\$|%|\^|&|\*|\(|\)|\+|=|\/|\\|\||\{|\}|"|'|<|,|\.|>|\?|:|;|\[|\]|-{2,}/u;
-        let scrubedFlair = flair;
-
-        while (scrubedFlair.match(regexIllegalChars)) {
-          scrubedFlair = scrubedFlair.replace(regexIllegalChars, "-");
+      let findFlair = function (iflair, cname) {
+        let flair;
+        for (let i in cname) {
+          if (cname.charAt(i) !== iflair.charAt(i)) {
+            flair = iflair.substring(0, i);
+          }
         }
 
-        scrubedFlair = scrubedFlair.replace(/^-/gu, "");
-
-        return scrubedFlair;
+        return flair;
       };
 
+      let preFlair = null;
+      let postFlair = null;
+
       if (args[0]) {
+        let regexIllegalChars = /^-|!|@|#|\$|%|\^|&|\*|\(|\)|\+|=|\/|\\|\||\{|\}|"|'|<|,|\.|>|\?|:|;|\[|\]|-{2,}/gu;
 
-        preFlair = scrubFlair(args[0]);
+        preFlair = args[0].replace(regexIllegalChars, "");
 
-        if (postFlair) {
-          postFlair = scrubFlair(args[1]);
+        if (args[1]) {
+          postFlair = args[1].replace(regexIllegalChars, "");
         } else {
           postFlair = "";
         }
 
-        if (preFlair.length > 0) {
+        if (preFlair.length + postFlair.length > 0) {
           bot.edit(nmsg, {
             fields: [
               {
                 name: "Adding flair:",
-                value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
+                value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
                 inline: false
               }
             ]
@@ -73,29 +67,13 @@ module.exports = (bot) => {
         msg.channel.guild.channels.forEach((channel) => {
           if (channel.type === 0) {
 
-            // look for prefix flair
-            preFlair = preFlair || channel.name;
+            preFlair = findFlair(preFlair === null ? channel.name : preFlair, channel.name);
 
-            for (let i = 0; i < channel.name.length; i += 1) {
-              if (channel.name.charAt(i) !== preFlair.charAt(i)) {
-                preFlair = preFlair.substring(0, i);
-              }
-            }
-
-            // look for postfix flair
-            let channelNameRev = channel.name.split("").reverse().join("");
-
-            postFlair = postFlair || channelNameRev;
-
-            for (let i = 0; i < channelNameRev.length; i += 1) {
-              if (channelNameRev.charAt(i) !== postFlair.charAt(i)) {
-                postFlair = postFlair.substring(0, i);
-              }
-            }
-
-            postFlair = postFlair.split("").reverse().join("");
+            postFlair = findFlair(postFlair === null ? channel.name.split("").reverse().join("") : postFlair, channel.name.split("").reverse().join(""));
           }
         });
+
+        postFlair = postFlair.split("").reverse().join("");
 
         // remove prefix flair
         if (preFlair.length > 0 || postFlair.length > 0) {
@@ -103,7 +81,7 @@ module.exports = (bot) => {
           bot.edit(nmsg, {fields: [
               {
               name: "Removing flair",
-              value: `\`\`\`${preFlair},${postFlair}\`\`\``,
+              value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
               inline: false
             }
           ]});
@@ -132,16 +110,10 @@ module.exports = (bot) => {
       bot.edit(nmsg, {fields: [
         {
           name: "Done",
-          value: `\`\`\`${preFlair} ${postFlair}\`\`\``,
+          value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
           inline: false
         }
       ]});
     }
   });
-};
-
-
-exports.info = {
-  args: "[flair]",
-  description: "adds a flair to all channels"
 };
