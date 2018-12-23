@@ -1,6 +1,6 @@
 module.exports = (bot) => {
   bot.registerCommand({
-    name: "channelflair",
+    name: "cf",
     category: "guild",
     info: {
       args: "[prefix flair] [postfix flair]",
@@ -8,21 +8,31 @@ module.exports = (bot) => {
     },
     generator: async (msg, args) => {
 
+      let test = await bot.prompt(msg, "yes or no", [
+        "yes",
+        "no"
+      ]);
+
+      return;
+
+
       if (!bot.checkPerm(msg, "manageChannels")) {
         return;
       }
 
       let nmsg = await bot.send(msg, "Rodger");
 
-      let findFlair = function (iflair, cname) {
-        let flair;
+      let findFlair = function (cname, flair) {
+        let oflair = flair;
+
         for (let i in cname) {
-          if (cname.charAt(i) !== iflair.charAt(i)) {
-            flair = iflair.substring(0, i);
+          if (cname[i] !== flair[i]) {
+            oflair = flair.substring(0, i);
+            break;
           }
         }
 
-        return flair;
+        return oflair;
       };
 
       let preFlair = null;
@@ -53,23 +63,25 @@ module.exports = (bot) => {
           for (let i of msg.channel.guild.channels) {
             let channel = i[1];
             let newname = preFlair + channel.name + postFlair;
-
+            
             if (channel.type === 0) {
-              await channel.edit({
-                name: newname
-              }, "Channel flair");
+              try {
+                await channel.edit({
+                  name: channel.cname
+                }, "Channel flair");
+                console.log("succ", channel.name, channel.permissionsOf(bot.user.id).allow)
+              } catch (err) {
+                console.log("fail", channel.name, channel.permissionsOf(bot.user.id).allow)
+              }
             }
           }
         }
 
       } else {
-
         msg.channel.guild.channels.forEach((channel) => {
           if (channel.type === 0) {
-
-            preFlair = findFlair(preFlair === null ? channel.name : preFlair, channel.name);
-
-            postFlair = findFlair(postFlair === null ? channel.name.split("").reverse().join("") : postFlair, channel.name.split("").reverse().join(""));
+            preFlair = findFlair(channel.name, preFlair || channel.name);
+            postFlair = findFlair(channel.name.split("").reverse().join(""), postFlair || channel.name.split("").reverse().join(""));
           }
         });
 
@@ -88,20 +100,19 @@ module.exports = (bot) => {
 
           for (let i of msg.channel.guild.channels) {
             let channel = i[1];
-            let newname = channel.name;
-
-            if (preFlair.length > 0) {
-              newname = newname.substring(preFlair.length);
-            }
-
-            if (postFlair.length > 0) {
-              newname = newname.substring(0, newname.length - postFlair.length);
-            }
 
             if (channel.type === 0) {
-              await channel.edit({
-                name: newname
-              }, "Channel flair");
+              let newname = channel.name.substring(preFlair.length, channel.name.length - postFlair.length);
+
+              if (channel.name !== newname) {
+                try {
+                  await channel.edit({
+                    name: newname
+                  }, "Channel flair");
+                } catch (err) {
+
+                }
+              }
             }
           }
         }

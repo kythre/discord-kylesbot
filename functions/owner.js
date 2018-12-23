@@ -35,7 +35,7 @@ module.exports = (bot) => {
         evaled = evaled.substring(0, 1012) + "...";
       }
 
-      return bot.send(msg, {
+      return bot.send(msg, "eval", {
         color: bot.color,
         fields: [
           {
@@ -62,34 +62,23 @@ module.exports = (bot) => {
     },
     generator: async (msg) => {
       await bot.save();
-      bot.send(msg, "done");
-    }
-  });
-
-  bot.registerCommand({
-    name: "audit",
-    category: "bot owner",
-    info: {
-      args: "none",
-      description: "audits all command files"
-    },
-    generator: async (msg) => {
-      bot.commands = {};
-      bot.commandsOrganized = {};
-      await bot.audit();
-      bot.send(msg, "done");
+      bot.send(msg, "save done");
     }
   });
 
   bot.registerCommand({
     name: "settings",
-    category: "bot owner",
+    category: "guild",
     info: {
       args: "none",
       description: "echos guild settings"
     },
     generator: async (msg) => {
-      bot.send(msg, "```js\n" + util.inspect(bot.guildSettings[msg.channel.guild.id]) + "```");
+      bot.send(msg, "guild settings", "```js\n" + util.inspect(bot.guildSettings[msg.channel.guild.id], {
+        depth: 3,
+        sorted: true,
+        breakLength: 10
+      }) + "```");
     }
   });
 };

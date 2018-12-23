@@ -63,12 +63,9 @@ bot.on("ready", async () => {
     });
 
     bot.guilds.forEach((guild) => {
-
-        guild.cmdsrunning = {};
-        bot.guildSettings[guild.id] = bot.guildSettings[guild.id];
-
+        bot.guildSettings[guild.id] = {};
         for (let i in bot.guildSettingsDefault) {
-            bot.guildSettings[guild.id] = bot.guildSettings[guild.id] || bot.guildSettingsDefault[i];
+            bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
         }
     });
 
@@ -79,7 +76,18 @@ bot.on("ready", async () => {
     log.ready(bot);
 });
 
+bot.on("guildCreate", async (guild) => {
+    bot.guildSettings[guild.id] = {};
+    for (let i in bot.guildSettingsDefault) {
+        bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
+    }
+});
+
 bot.on("messageCreate", async (msg) => {
+    if (msg.channel.prompt) {
+        msg.channel.prompt(msg);
+        return;
+    }
 
     if (!bot.isReady || !msg.author) {
         return;
@@ -105,13 +113,17 @@ bot.on("messageCreate", async (msg) => {
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
     msg.cmd = cmd;
 
+    // if command is currently being processed
+    if (msg.channel.cmdrunning) {
+        bot.commandDeny(msg, "CURRENTLY_RUNNING");
+        return;
+    }
+
     // if command doesnt exist/isnt found
     if (!cmd) {
         bot.send(msg, prefix + "help");
         return;
     }
-
-    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
 
     // if command is bot owner only
     if (cmd.category === "bot owner" && msg.author.id !== bot.owner) {
@@ -119,40 +131,41 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    if (guild) {
-        // if command is currently being processed
-        if (guild.cmdsrunning[cmd.name]) {
-            bot.commandDeny(msg, "CURRENTLY_RUNNING");
-            return;
-        }
-
-        guild.cmdsrunning[cmd.name] = true;
-
-        // if command is guild only
-    } else if (cmd.category === "guild") {
+    // if command is guild only
+    if (!guild && cmd.category === "guild") {
         bot.commandDeny(msg, "SERVER_ONLY");
         return;
     }
 
+    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
+
     log.cmd(msg, bot);
+
+    msg.channel.cmdrunning = true;
 
     try {
         await cmd.generator(msg, args);
     } catch (err) {
-        log.err(err.stack, bot.commands[cmd]);
+        if (err) {
+            if (err.message === "cancelled") {
+                bot.send(msg, "command cancelled");
+            } else if (err.message === "timeout") {
+                bot.send(msg, "command timed out", {timestamp: new Date().toISOString()});
+            } else {
+                log.err(err, bot.commands[cmd]);
 
-        let errr = err;
+                let stack = err.stack;
 
-        if (errr.length > 2000) {
-            errr = errr.substring(0, errr.length - (errr.length - 1991)) + "...";
+                if (stack.length > 2000) {
+                    stack = stack.substring(0, stack.length - 1989) + "...";
+                }
+
+                bot.send(msg, `\`${err.message}\``, `\`\`\`js\n${err.stack}\`\`\``);
+            }
         }
-
-        bot.send(msg, `\`\`\`${errr}\`\`\``);
     }
 
-    if (guild) {
-        guild.cmdsrunning[cmd.name] = false;
-    }
+    msg.channel.cmdrunning = false;
 });
 
 bot.connect().catch((err) => log.err(err, "Login"));
