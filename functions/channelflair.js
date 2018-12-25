@@ -8,14 +8,20 @@ module.exports = (bot) => {
     },
     generator: async (msg, args) => {
 
-      let test = await bot.prompt(msg, "yes or no", [
-        "yes",
-        "no"
-      ]);
+    }
+  });
 
-      return;
-
-
+  bot.registerCommand({
+    name: "cfs",
+    category: "guild",
+    info: {
+      name: "simple channel flair",
+      args: "[prefix flair] [postfix flair]",
+      description: "adds a flair to all channels\n" +
+      "this bot can only affect channels it has access to\n" +
+      "requires admin permissions or read permissions for each channel"
+    },
+    generator: async (msg, args) => {
       if (!bot.checkPerm(msg, "manageChannels")) {
         return;
       }
@@ -50,36 +56,67 @@ module.exports = (bot) => {
         }
 
         if (preFlair.length + postFlair.length > 0) {
-          bot.edit(nmsg, {
+          let whatido = {can: "",
+          cant: "",
+          channels: []};
+          for (let i of msg.channel.guild.channels) {
+            let channel = i[1];
+            if (channel.type === 0) {
+              if (channel.permissionsOf(bot.user.id).has("readMessages")) {
+                whatido.can += `'${channel.name}' -> '${preFlair + channel.name + postFlair}'\n`;
+                whatido.channels.push(channel);
+              } else {
+                whatido.cant += `'${channel.name}'\n`;
+              }
+            }
+          }
+
+          bot.edit(nmsg, "Channel flair legacy", {
             fields: [
               {
-                name: "Adding flair:",
-                value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
+                name: "Changing channels to:",
+                value: "```js\n" +
+                `prefix: '${preFlair}'\n` +
+                `postfix: '${postFlair}'\n` +
+                `${whatido.can}\`\`\``,
+                inline: false
+              },
+              {
+                name: "Cant edit these:",
+                value: "```js\n " +
+                `${whatido.cant}\`\`\``,
                 inline: false
               }
             ]
           });
 
-          for (let i of msg.channel.guild.channels) {
-            let channel = i[1];
+          await bot.prompt(msg, "continue?", "continue");
+
+          bot.send(nmsg, "Channel flair legacy", {fields: [
+            {
+              name: "Adding flair",
+              value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
+              inline: false
+            }
+          ]});
+
+          for (let i of whatido.channels) {
+            let channel = i;
             let newname = preFlair + channel.name + postFlair;
             
-            if (channel.type === 0) {
-              try {
-                await channel.edit({
-                  name: channel.cname
-                }, "Channel flair");
-                console.log("succ", channel.name, channel.permissionsOf(bot.user.id).allow)
-              } catch (err) {
-                console.log("fail", channel.name, channel.permissionsOf(bot.user.id).allow)
-              }
+            try {
+              await channel.edit({
+                name: newname
+              }, "Channel flair");
+            } catch (err) {
+              bot.send(msg, err);
             }
           }
         }
 
       } else {
         msg.channel.guild.channels.forEach((channel) => {
-          if (channel.type === 0) {
+          if (channel.type === 0 && channel.permissionsOf(bot.user.id).has("readMessages")) {
             preFlair = findFlair(channel.name, preFlair || channel.name);
             postFlair = findFlair(channel.name.split("").reverse().join(""), postFlair || channel.name.split("").reverse().join(""));
           }
@@ -89,8 +126,43 @@ module.exports = (bot) => {
 
         // remove prefix flair
         if (preFlair.length > 0 || postFlair.length > 0) {
+          let whatido = {can: "",
+          cant: "",
+          channels: []};
+          for (let i of msg.channel.guild.channels) {
+            let channel = i[1];
+            if (channel.type === 0) {
+              if (channel.permissionsOf(bot.user.id).has("readMessages")) {
+                whatido.can += `'${channel.name}' -> '${channel.name.substring(preFlair.length, channel.name.length - postFlair.length)}'\n`;
+                whatido.channels.push(channel);
+              } else {
+                whatido.cant += `'${channel.name}'\n`;
+              }
+            }
+          }
 
-          bot.edit(nmsg, {fields: [
+          bot.edit(nmsg, "Channel flair legacy", {
+            fields: [
+              {
+                name: "Changing channels to:",
+                value: "```js\n" +
+                `prefix: '${preFlair}'\n` +
+                `postfix: '${postFlair}'\n` +
+                `${whatido.can}\`\`\``,
+                inline: false
+              },
+              {
+                name: "Cant edit these:",
+                value: "```js\n " +
+                `${whatido.cant}\`\`\``,
+                inline: false
+              }
+            ]
+          });
+
+          await bot.prompt(msg, "continue?", "continue");
+
+          bot.send(nmsg, "Channel flair legacy", {fields: [
               {
               name: "Removing flair",
               value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
@@ -118,7 +190,7 @@ module.exports = (bot) => {
         }
       }
 
-      bot.edit(nmsg, {fields: [
+      bot.send(nmsg, "Channel flair legacy", {fields: [
         {
           name: "Done",
           value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
