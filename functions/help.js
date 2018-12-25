@@ -38,8 +38,8 @@ module.exports = (bot) => {
           return msg.channel.createMessage("what?");
         }
 
-        return bot.send(msg, {
-          title: `${cmd.name} command info`,
+        return bot.send(msg, "help", {
+          title: `${cmd.info.name || cmd.name + " command info"}`,
           fields: [
             {
               name: "description",
