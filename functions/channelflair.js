@@ -7,7 +7,7 @@ module.exports = (bot) => {
       description: "adds a flair to all channels"
     },
     generator: async (msg, args) => {
-
+      // complex channel flair
     }
   });
 
@@ -27,94 +27,39 @@ module.exports = (bot) => {
       }
 
       let nmsg = await bot.send(msg, "Rodger");
-
-      let findFlair = function (cname, flair) {
-        let oflair = flair;
-
-        for (let i in cname) {
-          if (cname[i] !== flair[i]) {
-            oflair = flair.substring(0, i);
-            break;
-          }
-        }
-
-        return oflair;
-      };
-
       let preFlair = null;
       let postFlair = null;
+      let addingFlair = typeof args[0] !== "undefined";
+      let regexIllegalChars = /!|@|#|\$|%|\^|&|\*|\(|\)|\+|=|\/|\\|\||\{|\}|"|'|<|,|\.|>|\?|:|;|\[|\]|-{2,}/gu;
+      let whatido = {can: "",
+      cant: "",
+      channels: []};
 
-      if (args[0]) {
-        let regexIllegalChars = /^-|!|@|#|\$|%|\^|&|\*|\(|\)|\+|=|\/|\\|\||\{|\}|"|'|<|,|\.|>|\?|:|;|\[|\]|-{2,}/gu;
-
+      // find flair to add or remove
+      if (addingFlair) {
         preFlair = args[0].replace(regexIllegalChars, "");
+        preFlair = preFlair.replace(/^-/gu, "");
 
         if (args[1]) {
           postFlair = args[1].replace(regexIllegalChars, "");
+          postFlair = postFlair.replace(/-$/gu, "");
         } else {
           postFlair = "";
         }
-
-        if (preFlair.length + postFlair.length > 0) {
-          let whatido = {can: "",
-          cant: "",
-          channels: []};
-          for (let i of msg.channel.guild.channels) {
-            let channel = i[1];
-            if (channel.type === 0) {
-              if (channel.permissionsOf(bot.user.id).has("readMessages")) {
-                whatido.can += `'${channel.name}' -> '${preFlair + channel.name + postFlair}'\n`;
-                whatido.channels.push(channel);
-              } else {
-                whatido.cant += `'${channel.name}'\n`;
-              }
-            }
-          }
-
-          bot.edit(nmsg, "Channel flair legacy", {
-            fields: [
-              {
-                name: "Changing channels to:",
-                value: "```js\n" +
-                `prefix: '${preFlair}'\n` +
-                `postfix: '${postFlair}'\n` +
-                `${whatido.can}\`\`\``,
-                inline: false
-              },
-              {
-                name: "Cant edit these:",
-                value: "```js\n " +
-                `${whatido.cant}\`\`\``,
-                inline: false
-              }
-            ]
-          });
-
-          await bot.prompt(msg, "continue?", "continue");
-
-          bot.send(nmsg, "Channel flair legacy", {fields: [
-            {
-              name: "Adding flair",
-              value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
-              inline: false
-            }
-          ]});
-
-          for (let i of whatido.channels) {
-            let channel = i;
-            let newname = preFlair + channel.name + postFlair;
-            
-            try {
-              await channel.edit({
-                name: newname
-              }, "Channel flair");
-            } catch (err) {
-              bot.send(msg, err);
-            }
-          }
-        }
-
       } else {
+        let findFlair = function (cname, flair) {
+          let oflair = flair;
+
+          for (let i in cname) {
+            if (cname[i] !== flair[i]) {
+              oflair = flair.substring(0, i);
+              break;
+            }
+          }
+
+          return oflair;
+        };
+
         msg.channel.guild.channels.forEach((channel) => {
           if (channel.type === 0 && channel.permissionsOf(bot.user.id).has("readMessages")) {
             preFlair = findFlair(channel.name, preFlair || channel.name);
@@ -123,74 +68,80 @@ module.exports = (bot) => {
         });
 
         postFlair = postFlair.split("").reverse().join("");
+      }
 
-        // remove prefix flair
-        if (preFlair.length > 0 || postFlair.length > 0) {
-          let whatido = {can: "",
-          cant: "",
-          channels: []};
-          for (let i of msg.channel.guild.channels) {
-            let channel = i[1];
-            if (channel.type === 0) {
-              if (channel.permissionsOf(bot.user.id).has("readMessages")) {
-                whatido.can += `'${channel.name}' -> '${channel.name.substring(preFlair.length, channel.name.length - postFlair.length)}'\n`;
-                whatido.channels.push(channel);
+      // audit channels for flair change
+      if (preFlair.length + postFlair.length > 0) {
+        for (let i of msg.channel.guild.channels) {
+          let channel = i[1];
+          if (channel.type === 0) {
+            if (channel.permissionsOf(bot.user.id).has("readMessages")) {
+              if (addingFlair) {
+                whatido.can += `'${channel.name}' -> '${preFlair + channel.name + postFlair}'\n`;
               } else {
-                whatido.cant += `'${channel.name}'\n`;
+                whatido.can += `'${channel.name}' -> '${channel.name.substring(preFlair.length, channel.name.length - postFlair.length)}'\n`;
               }
-            }
-          }
-
-          bot.edit(nmsg, "Channel flair legacy", {
-            fields: [
-              {
-                name: "Changing channels to:",
-                value: "```js\n" +
-                `prefix: '${preFlair}'\n` +
-                `postfix: '${postFlair}'\n` +
-                `${whatido.can}\`\`\``,
-                inline: false
-              },
-              {
-                name: "Cant edit these:",
-                value: "```js\n " +
-                `${whatido.cant}\`\`\``,
-                inline: false
-              }
-            ]
-          });
-
-          await bot.prompt(msg, "continue?", "continue");
-
-          bot.send(nmsg, "Channel flair legacy", {fields: [
-              {
-              name: "Removing flair",
-              value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
-              inline: false
-            }
-          ]});
-
-          for (let i of msg.channel.guild.channels) {
-            let channel = i[1];
-
-            if (channel.type === 0) {
-              let newname = channel.name.substring(preFlair.length, channel.name.length - postFlair.length);
-
-              if (channel.name !== newname) {
-                try {
-                  await channel.edit({
-                    name: newname
-                  }, "Channel flair");
-                } catch (err) {
-
-                }
-              }
+              whatido.channels.push(channel);
+            } else {
+              whatido.cant += `'${channel.name}'\n`;
             }
           }
         }
       }
 
-      bot.send(nmsg, "Channel flair legacy", {fields: [
+      bot.edit(nmsg, "simple channel flair", {
+        fields: [
+          {
+            name: "Flair:",
+            value: "```js\n" +
+            `prefix: '${preFlair}'\n` +
+            `postfix: '${postFlair}'\`\`\``
+          },
+          {
+            name: "Changing channels to:",
+            value: "```js\n" +
+            `${whatido.can}\`\`\``
+          },
+          {
+            name: "I have no access to these channels:",
+            value: "```js\n " +
+            `${whatido.cant}\`\`\``
+          }
+        ]
+      });
+
+      await bot.prompt(msg, "continue?", "continue");
+
+      nmsg = await bot.send(nmsg, "simple channel flair", {fields: [
+          {
+          name: `${addingFlair ? "Adding" : "Removing"} flair`,
+          value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,
+          inline: false
+        }
+      ]});
+
+      for (let i of whatido.channels) {
+        let channel = i;
+        let newname;
+
+        if (addingFlair) {
+          newname = preFlair + channel.name + postFlair;
+        } else {
+          newname = channel.name.substring(preFlair.length, channel.name.length - postFlair.length);
+        }
+
+        if (channel.name !== newname) {
+          try {
+            await channel.edit({
+              name: newname
+            }, "Channel flair");
+          } catch (err) {
+            bot.send(msg, err);
+          }
+        }
+      }
+
+      bot.edit(nmsg, "simple channel flair", {fields: [
         {
           name: "Done",
           value: `\`\`\`js\n'${preFlair}'\n'${postFlair}'\`\`\``,

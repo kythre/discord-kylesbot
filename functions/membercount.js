@@ -1,7 +1,7 @@
 module.exports = (bot) => {
 
   let countRefresh = async function (guild) {
-    let settings = bot.guildSettings[guild.id].membercount;
+    let settings = bot.guildSettings[guild.id].memberCount;
 
     if (!settings) {
       return;
@@ -25,14 +25,14 @@ module.exports = (bot) => {
             console.log(err);
           });
         } else {
-          //bot.guildSettings[guild.id].membercount.channels[i].channel = null;
+          // bot.guildSettings[guild.id].memberCount.channels[i].channel = null;
         }
       }
     }
   };
 
   let auditMembers = function (guild) {
-    let settings = bot.guildSettings[guild.id].membercount;
+    let settings = bot.guildSettings[guild.id].memberCount;
 
     if (!settings) {
       return;
@@ -50,14 +50,14 @@ module.exports = (bot) => {
       }
     });
 
-    bot.guildSettings[guild.id].membercount = settings;
+    bot.guildSettings[guild.id].memberCount = settings;
   };
 
   bot.on("guildMemberRemove", (guild, member) => {
     if (member.bot) {
-      bot.guildSettings[guild.id].membercount.counts.bot -= 1;
+      bot.guildSettings[guild.id].memberCount.counts.bot -= 1;
     } else {
-      bot.guildSettings[guild.id].membercount.counts.humans -= 1;
+      bot.guildSettings[guild.id].memberCount.counts.humans -= 1;
     }
 
     countRefresh(guild);
@@ -65,9 +65,9 @@ module.exports = (bot) => {
 
   bot.on("guildMemberAdd", (guild, member) => {
     if (member.bot) {
-      bot.guildSettings[guild.id].membercount.counts.bot += 1;
+      bot.guildSettings[guild.id].memberCount.counts.bot += 1;
     } else {
-      bot.guildSettings[guild.id].membercount.counts.humans += 1;
+      bot.guildSettings[guild.id].memberCount.counts.humans += 1;
     }
 
     countRefresh(guild);
@@ -91,7 +91,7 @@ module.exports = (bot) => {
       }
 
       let guild = msg.channel.guild;
-      let settings = bot.guildSettings[guild.id].membercount;
+      let settings = bot.guildSettings[guild.id].memberCount;
       let temp;
 
       settings = settings || {
@@ -120,7 +120,7 @@ module.exports = (bot) => {
 
       temp = args[0] ? args[0].toLowerCase() : await bot.prompt(msg, "wyd ?", [
         "setup",
-        "set",
+        "edit",
         "refresh"
       ]);
 
@@ -146,13 +146,14 @@ module.exports = (bot) => {
             channel.editPermission(guild.id, 0, 0x00100000, "role", "Member count");
           }
 
-          bot.guildSettings[msg.channel.guild.id].membercount = settings;
+          bot.guildSettings[msg.channel.guild.id].memberCount = settings;
 
           auditMembers(guild);
           countRefresh(guild);
+          bot.send(msg, "done");
         break;
 
-        case "set":
+        case "edit":
           temp = args[1] ? args[1].toLowerCase() : await bot.prompt(msg, "`total`, `bot`, `human` ?", [
             "total",
             "bot",
@@ -162,7 +163,15 @@ module.exports = (bot) => {
             case "total":
             case "bot":
             case "human":
-              temp = bot._.drop(args, 2).join(" ");
+              temp = args[2] ? bot._.drop(args, 2).join(" ") : await bot.prompt(msg, {
+                  title: "set it to?",
+                  description: "give me a title with a variable:\n" +
+                  "```js\n" +
+                  "total: '%t'\n" +
+                  "humans: '%h'\n" +
+                  "bots: '%b'```\n" +
+                  "example: `Member Count: %m`"
+                });
               if (temp === "") {
                 bot.send(
                   msg, "you didnt tell me what to set it to",
@@ -175,11 +184,13 @@ module.exports = (bot) => {
                   );
               } else if (temp.length > 2 && temp.length < 95) {
                 bot._.set(settings, `channels.mCount${bot._.capitalize(args[1])}.string`, temp);
-                bot.guildSettings[guild.id].membercount = settings;
+                bot.guildSettings[guild.id].memberCount = settings;
                 countRefresh(guild);
               } else {
-                bot.send(msg, `\`${temp}\` no good.`);
+                bot.send(msg, `\`${temp}\` is a shitty title, try again.`);
               }
+
+              bot.send(msg, "done");
             break;
             default:
               bot.send(msg, "sets an mc channel's title\nchoose: `total`, `bot`, `human` ?");
@@ -190,10 +201,11 @@ module.exports = (bot) => {
         case "refresh":
           auditMembers(guild);
           countRefresh(guild);
+          bot.send(msg, "done");
         break;
 
         default:
-          bot.send(msg, "`setup`, `set`, `refresh` ?");
+          bot.send(msg, "`setup`, `edit`, `refresh` ?");
         break;
       }
     }

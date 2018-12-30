@@ -36,7 +36,8 @@ bot.guildSettingsDefault = {
         nick: false,
         roles: false
     },
-    memberCache: {}
+    memberCache: {},
+    memberCount: {}
 };
 bot.guildSettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
@@ -63,7 +64,7 @@ bot.on("ready", async () => {
     });
 
     bot.guilds.forEach((guild) => {
-        bot.guildSettings[guild.id] = {};
+        bot.guildSettings[guild.id] = bot.guildSettings[guild.id] || {};
         for (let i in bot.guildSettingsDefault) {
             bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
         }
@@ -138,6 +139,11 @@ bot.on("messageCreate", async (msg) => {
     }
 
     let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
+    let argss = msg.content.slice(prefix.length + cmd.name.length).match(/"[^"]*"/);
+
+    console.log(`'${msg.content.slice(prefix.length + cmd.name.length)}'`)
+
+    console.log(args, argss)
 
     log.cmd(msg, bot);
 

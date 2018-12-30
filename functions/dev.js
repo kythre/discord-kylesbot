@@ -20,7 +20,7 @@ module.exports = (bot) => {
       }
 
       evaled = util.inspect(evaled, {
-        depth: 0,
+        depth: 1,
         sorted: true,
         breakLength: 100
       });
