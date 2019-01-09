@@ -31,8 +31,8 @@ module.exports = (bot) => {
       let postFlair = null;
       let addingFlair = typeof args[0] !== "undefined";
       let regexIllegalChars = /!|@|#|\$|%|\^|&|\*|\(|\)|\+|=|\/|\\|\||\{|\}|"|'|<|,|\.|>|\?|:|;|\[|\]|-{2,}/gu;
-      let whatido = {can: "",
-      cant: "",
+      let whatido = {can: " ",
+      cant: " ",
       channels: []};
 
       // find flair to add or remove
