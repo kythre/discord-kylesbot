@@ -9,19 +9,19 @@ require("./lib/message.js")(bot);
 require("./lib/file.js")(bot);
 require("./lib/commands.js")(bot);
 
-process.on("SIGINT", () => {
-    bot.save();
+process.on("SIGINT", async () => {
+    await bot.save();
     bot.disconnect({
         reconnect: false
     });
     setTimeout(() => process.exit(0), 1000);
 });
-process.on("exit", (code) => {
-    bot.save();
-    log.err(`Exited with code ${code}`, "Exit");
+process.on("exit", async (code) => {
+    await bot.save();
+    log.err(`Exited with code ${code}`, "Bot");
 });
-process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection"));
-process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception"));
+process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection", "Bot"));
+process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception", "Bot"));
 
 bot.commands = {};
 bot.isReady = false;
@@ -45,13 +45,11 @@ bot.color = 46847;
 
 bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
-bot.on("disconnect", () => log.log("Disconnected from Discord", "Disconnect"));
-
+bot.on("disconnect", () => log.log("Disconnected from Discord", "Bot"));
 bot.on("ready", async () => {
-
-    fs.readdir("./modules", {
+    await fs.readdir("./modules", {
         withFileTypes: true
-    }, async (err, files) => {
+    }, (err, files) => {
 
         for (let i in files) {
             let file = files[i];
@@ -74,16 +72,21 @@ bot.on("ready", async () => {
 
     bot.isReady = true;
 
+    // save data every 5 minutes
+    setInterval(async () => {
+        log.log("start", "Save");
+        await bot.save();
+        log.log("done", "Save");
+    }, 300000);
+
     log.ready(bot);
 });
-
 bot.on("guildCreate", async (guild) => {
     bot.guildSettings[guild.id] = {};
     for (let i in bot.guildSettingsDefault) {
         bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
     }
 });
-
 bot.on("messageCreate", async (msg) => {
     if (msg.channel.prompt) {
         msg.channel.prompt(msg);
@@ -138,12 +141,23 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    let args = msg.content.slice(prefix.length + cmd.name.length).split(" ").slice(1);
-    let argss = msg.content.slice(prefix.length + cmd.name.length).match(/"[^"]*"/);
+    let args = msg.content.slice(prefix.length + cmd.name.length);
 
-    console.log(`'${msg.content.slice(prefix.length + cmd.name.length)}'`)
-
-    console.log(args, argss)
+    if (cmd.name === "eval") {
+        args = args.split(" ").slice(1);
+    } else {
+        args = bot._.trim(args);
+        args = args.split(/("[^"]*")/g);
+        args = bot._.map(args, (x) => bot._.trim(x));
+        args = bot._.compact(args);
+        args = bot._.map(args, (x) => {
+            if (x.match(/("[^"]*")/g)) {
+                return bot._.trim(x, "\"");
+            }
+            return x.split(" ");
+        });
+        args = bot._.flattenDeep(args);
+    }
 
     log.cmd(msg, bot);
 
@@ -173,5 +187,4 @@ bot.on("messageCreate", async (msg) => {
 
     msg.channel.cmdrunning = false;
 });
-
 bot.connect().catch((err) => log.err(err, "Login"));
