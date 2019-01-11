@@ -81,12 +81,15 @@ bot.on("ready", async () => {
 
     log.ready(bot);
 });
+
 bot.on("guildCreate", async (guild) => {
+    log.log(`"${guild.name}"`, "Guild join");
     bot.guildSettings[guild.id] = {};
     for (let i in bot.guildSettingsDefault) {
         bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
     }
 });
+
 bot.on("messageCreate", async (msg) => {
     if (msg.channel.prompt) {
         msg.channel.prompt(msg);
@@ -106,7 +109,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     let guild = msg.channel.guild ? msg.channel.guild : "";
-    let prefixRegex = new RegExp(`^((${bot.user.mention})|(${guild ? bot.guildSettings[guild.id].prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
+    let prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettings[guild.id].prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 
@@ -117,15 +120,22 @@ bot.on("messageCreate", async (msg) => {
     let cmd = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
     msg.cmd = cmd;
 
+    if (prefix.match(new RegExp(`^(<@!?${bot.user.mention.slice(2)})`, "i"))) {
+        prefix = `@${msg.channel.guild.members.get(bot.user.id).nick ? msg.channel.guild.members.get(bot.user.id).nick : bot.user.username} `;
+    }
+
     // if command is currently being processed
     if (msg.channel.cmdrunning) {
         bot.commandDeny(msg, "CURRENTLY_RUNNING");
         return;
     }
 
-    // if command doesnt exist/isnt found
     if (!cmd) {
-        bot.send(msg, prefix + "help");
+        if (guild) {
+            bot.send(msg, prefix + "help");
+        } else {
+            bot.getDMChannel("115340880117891072").then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
+        }
         return;
     }
 
@@ -143,7 +153,8 @@ bot.on("messageCreate", async (msg) => {
 
     let args = msg.content.slice(prefix.length + cmd.name.length);
 
-    if (cmd.name === "eval") {
+    // gross
+    if (cmd.name === "eval" || cmd.nane === "say") {
         args = args.split(" ").slice(1);
     } else {
         args = bot._.trim(args);
