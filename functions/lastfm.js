@@ -42,7 +42,7 @@ module.exports = (bot) => {
         res.on("end", () => {
             try {
               const data = JSON.parse(rawData);
-              if (currenttrack !== data.recenttracks.track[0]) {
+              if (!currenttrack || currenttrack.url !== data.recenttracks.track[0].url) {
                 currenttrack = data.recenttracks.track[0];
                 let status = currenttrack.name + " by " + currenttrack.artist["#text"];
                 bot.log.log("Setting to: " + status, "LastFM", "bgCyan", true);
