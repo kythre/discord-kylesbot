@@ -96,30 +96,6 @@ module.exports = (bot) => {
       let temp;
       let edit;
 
-      settings = settings || {
-        counts: {
-          bots: 0,
-          humans: 0
-        },
-        channels: {
-          mccategory: {
-            channel: null
-          },
-          mctotal: {
-            channel: null,
-            string: "Members: %t"
-          },
-          mchuman: {
-            channel: null,
-            string: "Humans: %h"
-          },
-          mcbot: {
-            channel: null,
-            string: "Bots: %b"
-          }
-        }
-      };
-
       temp = args[0] ? args[0].toLowerCase() : await bot.prompt(msg, "wyd ?", [
         "setup",
         "edit",

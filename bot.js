@@ -64,6 +64,12 @@ bot.guildsettingsDefault = {
 bot.guildsettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
+bot.buildsettings = function (guild) {
+    bot.guildsettings[guild.id] = bot.guildsettings[guild.id] || {};
+    for (let i in bot.guildsettingsDefault) {
+        bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
+    }
+};
 
 bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
@@ -84,10 +90,7 @@ bot.on("ready", async () => {
     });
 
     bot.guilds.forEach((guild) => {
-        bot.guildsettings[guild.id] = bot.guildsettings[guild.id] || {};
-        for (let i in bot.guildsettingsDefault) {
-            bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
-        }
+        bot.buildsettings(guild);
     });
 
     await bot.audit();
@@ -106,10 +109,7 @@ bot.on("ready", async () => {
 
 bot.on("guildCreate", async (guild) => {
     log.log(`"${guild.name}"`, "Guild join");
-    bot.guildsettings[guild.id] = {};
-    for (let i in bot.guildsettingsDefault) {
-        bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
-    }
+    bot.buildsettings(guild);
 });
 
 bot.on("messageCreate", async (msg) => {
