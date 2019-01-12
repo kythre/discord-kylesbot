@@ -16,7 +16,7 @@ module.exports = (bot) => {
       return;
     }
 
-    bot.guildSettings[guild.id].memberCache[member.id] = {
+    bot.guildsettings[guild.id].membercache[member.id] = {
       nick: member.nick,
       roles: member.roles
     };
@@ -30,15 +30,15 @@ module.exports = (bot) => {
       return;
     }
 
-    let guildSettings = bot.guildSettings[guild.id];
-    let memberCache = guildSettings.memberCache[member.id];
+    let guildsettings = bot.guildsettings[guild.id];
+    let membercache = guildsettings.membercache[member.id];
 
-    if (memberCache && (guildSettings.persist.nick || guildSettings.persist.roles)) {
+    if (membercache && (guildsettings.persist.nick || guildsettings.persist.roles)) {
       await setTimeout(async () => {
         try {
           await member.edit({
-            roles: guildSettings.persist.roles ? memberCache.roles : member.roles,
-            nick: guildSettings.persist.nick ? memberCache.nick : member.nick
+            roles: guildsettings.persist.roles ? membercache.roles : member.roles,
+            nick: guildsettings.persist.nick ? membercache.nick : member.nick
           }, "Persist");
         } catch (err) {
           bot.error("Persists", err);

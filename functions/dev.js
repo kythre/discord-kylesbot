@@ -70,12 +70,20 @@ module.exports = (bot) => {
     name: "settings",
     category: "guild",
     info: {
-      args: "none",
+      args: "depth",
       description: "echos guild settings"
     },
-    generator: async (msg) => {
-      bot.send(msg, "guild settings", "```js\n" + util.inspect(bot.guildSettings[msg.channel.guild.id], {
-        depth: 3,
+    generator: async (msg, args) => {
+      let settings;
+
+      if (args[0]) {
+        settings = bot._.get(bot.guildsettings[msg.channel.guild.id], args[0]);
+      } else {
+        settings = bot.guildsettings[msg.channel.guild.id];
+      }
+
+      bot.send(msg, "guild settings", "```js\n" + util.inspect(settings, {
+        depth: 1,
         sorted: true,
         breakLength: 10
       }) + "```");

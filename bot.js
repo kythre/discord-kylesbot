@@ -30,16 +30,38 @@ bot.fs = fs;
 bot._ = _;
 bot.secret = secret;
 bot.owner = "115340880117891072";
-bot.guildSettingsDefault = {
+bot.guildsettingsDefault = {
     prefix: "k!",
     persist: {
         nick: false,
         roles: false
     },
-    memberCache: {},
-    memberCount: {}
+    membercache: {},
+    membercount: {
+        counts: {
+            bots: 0,
+            humans: 0
+        },
+        channels: {
+            mccategory: {
+            channel: null
+            },
+            mctotal: {
+            channel: null,
+            string: "Members: %t"
+            },
+            mchuman: {
+            channel: null,
+            string: "Humans: %h"
+            },
+            mcbot: {
+            channel: null,
+            string: "Bots: %b"
+            }
+        }
+    }
 };
-bot.guildSettings = require("./data/guilds.json");
+bot.guildsettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
 
@@ -62,9 +84,9 @@ bot.on("ready", async () => {
     });
 
     bot.guilds.forEach((guild) => {
-        bot.guildSettings[guild.id] = bot.guildSettings[guild.id] || {};
-        for (let i in bot.guildSettingsDefault) {
-            bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
+        bot.guildsettings[guild.id] = bot.guildsettings[guild.id] || {};
+        for (let i in bot.guildsettingsDefault) {
+            bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
         }
     });
 
@@ -77,16 +99,16 @@ bot.on("ready", async () => {
         log.log("start", "Save");
         await bot.save();
         log.log("done", "Save");
-    }, 300000);
+    }, 600000);
 
     log.ready(bot);
 });
 
 bot.on("guildCreate", async (guild) => {
     log.log(`"${guild.name}"`, "Guild join");
-    bot.guildSettings[guild.id] = {};
-    for (let i in bot.guildSettingsDefault) {
-        bot.guildSettings[guild.id][i] = bot.guildSettings[guild.id][i] || bot.guildSettingsDefault[i];
+    bot.guildsettings[guild.id] = {};
+    for (let i in bot.guildsettingsDefault) {
+        bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
     }
 });
 
@@ -109,7 +131,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     let guild = msg.channel.guild ? msg.channel.guild : "";
-    let prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettings[guild.id].prefix : bot.guildSettingsDefault.prefix}))\\s?`, "gi");
+    let prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildsettings[guild.id].prefix : bot.guildsettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 

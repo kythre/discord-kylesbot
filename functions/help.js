@@ -54,7 +54,7 @@ module.exports = (bot) => {
       }
 
       return bot.send(msg, "help", {
-        description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guildSettings[msg.channel.guild.id].prefix : ""}help [command name]\``,
+        description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guildsettings[msg.channel.guild.id].prefix : ""}help [command name]\``,
         fields: commandCategoryFields
       });
     }
