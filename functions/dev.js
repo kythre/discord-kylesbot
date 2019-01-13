@@ -1,5 +1,6 @@
 module.exports = (bot) => {
   const util = require("util");
+  const moment = require("moment");
 
   bot.registerCommand({
     name: "eval",
@@ -22,7 +23,7 @@ module.exports = (bot) => {
       evaled = util.inspect(evaled, {
         depth: 1,
         sorted: true,
-        breakLength: 100
+        breakLength: 200
       });
 
       evaled.replace(/`/g, "`" + String.fromCharCode(8203));
@@ -87,6 +88,39 @@ module.exports = (bot) => {
         sorted: true,
         breakLength: 10
       }) + "```");
+    }
+  });
+
+  bot.registerCommand({
+    name: "ping",
+    category: "misc",
+    info: {
+      args: "[none]",
+      description: "ping pong"
+    },
+    generator: (msg) => {
+      bot.send(msg, "Pong", `\`${Date.now() - msg.timestamp} ms\``);
+    }
+  });
+
+  bot.registerCommand({
+    name: "stats",
+    category: "misc",
+    info: {
+      args: "[none]",
+      description: "whats up doc"
+    },
+    generator: (msg) => {
+      bot.send(
+      msg, "Bot Stats",
+      `• Ping: \`${Date.now() - msg.timestamp}ms\`\n` +
+      `• Uptime: \`${moment.duration(bot.uptime, "milliseconds").humanize()}\`\n` +
+      `• Servers: \`${bot.guilds.size}\`\n` +
+      `• Members: \`${bot.users.size}\`\n` +
+      `• Memory RSS: \`${(process.memoryUsage().rss / 1024 / 1024).toFixed(2)} MB\`\n` +
+      `• Memory Heap: \`${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB / ${(process.memoryUsage().heapTotal / 1024 / 1024).toFixed(2)} MB\`\n` +
+      `• Memory External: \`${(process.memoryUsage().external / 1024 / 1024).toFixed(2)} MB\``
+      );
     }
   });
 };
