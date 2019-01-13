@@ -8,6 +8,7 @@ const _ = require("lodash");
 require("./lib/message.js")(bot);
 require("./lib/file.js")(bot);
 require("./lib/commands.js")(bot);
+require("./lib/misc.js")(bot);
 
 process.on("SIGINT", async () => {
     await bot.save();
@@ -64,12 +65,6 @@ bot.guildsettingsDefault = {
 bot.guildsettings = require("./data/guilds.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
-bot.buildsettings = function (guild) {
-    bot.guildsettings[guild.id] = bot.guildsettings[guild.id] || {};
-    for (let i in bot.guildsettingsDefault) {
-        bot.guildsettings[guild.id][i] = bot.guildsettings[guild.id][i] || bot.guildsettingsDefault[i];
-    }
-};
 
 bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));
@@ -156,7 +151,7 @@ bot.on("messageCreate", async (msg) => {
         if (guild) {
             bot.send(msg, prefix + "help");
         } else {
-            bot.getDMChannel("115340880117891072").then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
+            bot.getDMChannel(bot.owner).then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
         }
         return;
     }
