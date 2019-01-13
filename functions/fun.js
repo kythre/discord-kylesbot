@@ -43,11 +43,23 @@ module.exports = (bot) => {
     name: "m8b",
     category: "fun",
     info: {
-      args: "[none]",
+      args: "[question]",
       description: "magic 8 ball"
     },
-    generator: (msg) => {
-      bot.send(msg, responses[~~(Math.random() * responses.length)]);
+    generator: (msg, args) => {
+      bot.send(msg, "Magic 8ball", (args[0] ? `\`\`\`js\n"${args.join(" ")}"\`\`\`\n` : "") + `${responses[~~(Math.random() * responses.length)]}`);
+    }
+  });
+
+  bot.registerCommand({
+    name: "choose",
+    category: "fun",
+    info: {
+      args: "[options]",
+      description: "choosie woosie"
+    },
+    generator: (msg, args) => {
+      bot.send(msg, "Choose", (args[0] ? `\`\`\`js\n"${args.join(", ")}"\`\`\`\n` + args[~~(Math.random() * args.length)] : "fuck"));
     }
   });
 };
