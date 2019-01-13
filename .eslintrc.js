@@ -129,7 +129,7 @@ module.exports = {
         "no-array-constructor": "error",
         "no-async-promise-executor": "error",
         "no-await-in-loop": "off",
-        "no-bitwise": "error",
+        "no-bitwise": ["error", { "allow": ["~"] }],
         "no-buffer-constructor": "error",
         "no-caller": "error",
         "no-catch-shadow": "off",
