@@ -1,7 +1,7 @@
 module.exports = (bot) => {
 
   let countRefresh = async function (guild) {
-    let settings = bot.guildsettings[guild.id].membercount;
+    let settings = bot.guildSettingsGet(guild.id, "membercount");
 
     if (!settings) {
       return;
@@ -32,7 +32,7 @@ module.exports = (bot) => {
   };
 
   let auditMembers = function (guild) {
-    let settings = bot.guildsettings[guild.id].membercount;
+    let settings = bot.guildSettingsGet(guild.id, "membercount");
 
     if (!settings) {
       return;
@@ -51,26 +51,32 @@ module.exports = (bot) => {
       }
     });
 
-    bot.guildsettings[guild.id].membercount = settings;
+    bot.guildSettingsSet(guild.id, "membercount", settings);
   };
 
   bot.on("guildMemberRemove", (guild, member) => {
+    let counts = bot.guildSettingsGet(guild.id, "membercount.counts");
+
     if (member.bot) {
-      bot.guildsettings[guild.id].membercount.counts.bot -= 1;
+      counts.bot -= 1;
     } else {
-      bot.guildsettings[guild.id].membercount.counts.humans -= 1;
+      counts.humans -= 1;
     }
 
+    bot.guildSettingsSet(guild.id, "membercount.counts", counts);
     countRefresh(guild);
   });
 
   bot.on("guildMemberAdd", (guild, member) => {
+    let counts = bot.guildSettingsGet(guild.id, "membercount.counts");
+
     if (member.bot) {
-      bot.guildsettings[guild.id].membercount.counts.bot += 1;
+      counts.bot += 1;
     } else {
-      bot.guildsettings[guild.id].membercount.counts.humans += 1;
+      counts.humans += 1;
     }
 
+    bot.guildSettingsSet(guild.id, "membercount.counts", counts);
     countRefresh(guild);
   });
 
@@ -92,7 +98,7 @@ module.exports = (bot) => {
       }
 
       let guild = msg.channel.guild;
-      let settings = bot.guildsettings[guild.id].membercount;
+      let settings = bot.guildSettingsGet(guild.id, "membercount");
       let temp;
       let edit;
 
