@@ -1,4 +1,5 @@
 module.exports = (bot) => {
+  // say command
   bot.registerCommand({
     name: "say",
     category: "fun",
@@ -16,6 +17,7 @@ module.exports = (bot) => {
     }
   });
 
+  // magic 8ball command
   let responses = [
     "It is certain.",
     "It is decidedly so.",
@@ -38,7 +40,6 @@ module.exports = (bot) => {
     "Outlook not so good.",
     "Very doubtful."
   ];
-
   bot.registerCommand({
     name: "m8b",
     category: "fun",
@@ -51,6 +52,7 @@ module.exports = (bot) => {
     }
   });
 
+  // choose command
   bot.registerCommand({
     name: "choose",
     category: "fun",
@@ -61,5 +63,45 @@ module.exports = (bot) => {
     generator: (msg, args) => {
       bot.send(msg, "Choose", args[0] ? `\`\`\`js\n"${args.join(", ")}"\`\`\`\n` + args[~~(Math.random() * args.length)] : "yes");
     }
+  });
+
+  // dad
+  bot.on("messageCreate", (msg) => {
+    if (!msg.channel.guild) {
+      return;
+    }
+
+    if (!msg.author) {
+      return;
+    }
+
+    if (msg.author.id === bot.user.id) {
+      return;
+    }
+
+    if (!bot.guildSettingsGet(msg.channel.guild.id, "dad")) {
+      return;
+    }
+
+    let k = (/\b(im|i'm|i`m|i‘m)\s(.+)/ig).exec(msg.content);
+
+    if (k) {
+      if (k[2].match(/^dad/i)) {
+        bot.createMessage(msg.channel.id, "no, im dad.").catch(() => {
+          // fail
+        });
+        return;
+      }
+      bot.createMessage(msg.channel.id, `hi ${k[2]}, i'm dad!`).catch(() => {
+        // fail
+      });
+    }
+  });
+
+  bot.registerCommandConfigBool({
+    name: "dad",
+    verbose: "is dad awake?",
+    setting: "dad",
+    permission: "guild"
   });
 };
