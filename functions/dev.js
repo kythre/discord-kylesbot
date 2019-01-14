@@ -2,6 +2,7 @@ module.exports = (bot) => {
   const util = require("util");
   const moment = require("moment");
 
+  // eval command
   bot.registerCommand({
     name: "eval",
     category: "bot owner",
@@ -54,6 +55,7 @@ module.exports = (bot) => {
     }
   });
 
+  // save command
   bot.registerCommand({
     name: "save",
     category: "bot owner",
@@ -67,8 +69,9 @@ module.exports = (bot) => {
     }
   });
 
+  // guild settings echo command
   bot.registerCommand({
-    name: "settings",
+    name: "gsettings",
     category: "guild",
     info: {
       args: "depth",
@@ -91,6 +94,32 @@ module.exports = (bot) => {
     }
   });
 
+  // user settings echo command
+  bot.registerCommand({
+    name: "usettings",
+    category: "user",
+    info: {
+      args: "depth",
+      description: "echos user settings"
+    },
+    generator: async (msg, args) => {
+      let settings;
+
+      if (args[0]) {
+        settings = bot._.get(bot.usersettings[msg.author.id], args[0]);
+      } else {
+        settings = bot.usersettings[msg.author.id];
+      }
+
+      bot.send(msg, "guild settings", "```js\n" + util.inspect(settings, {
+        depth: 1,
+        sorted: true,
+        breakLength: 10
+      }) + "```");
+    }
+  });
+
+  // ping command
   bot.registerCommand({
     name: "ping",
     category: "misc",
@@ -103,6 +132,7 @@ module.exports = (bot) => {
     }
   });
 
+  // stats command
   bot.registerCommand({
     name: "stats",
     category: "misc",

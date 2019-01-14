@@ -63,6 +63,7 @@ bot.guildsettingsDefault = {
     }
 };
 bot.guildsettings = require("./data/guilds.json");
+bot.usersettings = require("./data/users.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
 
@@ -84,10 +85,6 @@ bot.on("ready", async () => {
         }
     });
 
-    bot.guilds.forEach((guild) => {
-        bot.buildsettings(guild);
-    });
-
     await bot.audit();
 
     bot.isReady = true;
@@ -104,7 +101,6 @@ bot.on("ready", async () => {
 
 bot.on("guildCreate", async (guild) => {
     log.log(`"${guild.name}"`, "Guild join");
-    bot.buildsettings(guild);
 });
 
 bot.on("messageCreate", async (msg) => {
