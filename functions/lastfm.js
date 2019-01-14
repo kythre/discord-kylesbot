@@ -29,6 +29,27 @@ module.exports = (bot) => {
     });
   };
 
+  let sendNP = function (msg, user, track) {
+    let a = {
+      thumbnail: {
+        url: track.image[3]["#text"]
+      },
+      author: {
+        name: `${user}'s LastFM`,
+        url: "https://www.last.fm/user/" + user
+      },
+      title: track.name,
+      url: track.url,
+      description: `${track.artist["#text"]} - ${track.album["#text"]}`
+    };
+
+    if (msg.author.id === bot.user.id) {
+      bot.edit(msg, "Now playing:", a);
+    } else {
+      bot.send(msg, "Now playing:", a);
+    }
+  };
+
   // fmset: user lastfm username config
   bot.registerCommandConfigStr({
     name: "fmset",
@@ -54,7 +75,7 @@ module.exports = (bot) => {
           bot.edit(nmsg, "LastFM", e || "nothing to show");
         });
         if (lastfmtrack) {
-          bot.sendNP(nmsg, lastfmusername, lastfmtrack);
+          sendNP(nmsg, lastfmusername, lastfmtrack);
         }
       } else {
         bot.send(msg, "LastFM", "gimme a username or set yours with the `fmset` command");
@@ -79,7 +100,7 @@ module.exports = (bot) => {
         return;
       }
 
-      bot.sendNP(msg, username, currenttrack);
+      sendNP(msg, username, currenttrack);
     }
   });
 

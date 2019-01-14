@@ -32,30 +32,7 @@ bot._ = _;
 bot.secret = secret;
 bot.owner = "115340880117891072";
 bot.guildsettingsDefault = {
-    prefix: "k!",
-    membercount: {
-        counts: {
-            bots: 0,
-            humans: 0
-        },
-        channels: {
-            mccategory: {
-            channel: null
-            },
-            mctotal: {
-            channel: null,
-            string: "Members: %t"
-            },
-            mchuman: {
-            channel: null,
-            string: "Humans: %h"
-            },
-            mcbot: {
-            channel: null,
-            string: "Bots: %b"
-            }
-        }
-    }
+    prefix: "k!"
 };
 bot.guildsettings = require("./data/guilds.json");
 bot.usersettings = require("./data/users.json");

@@ -98,7 +98,29 @@ module.exports = (bot) => {
       }
 
       let guild = msg.channel.guild;
-      let settings = bot.guildSettingsGet(guild.id, "membercount");
+      let settings = bot.guildSettingsGet(guild.id, "membercount") || {
+          counts: {
+              bots: 0,
+              humans: 0
+          },
+          channels: {
+              mccategory: {
+              channel: null
+              },
+              mctotal: {
+              channel: null,
+              string: "Members: %t"
+              },
+              mchuman: {
+              channel: null,
+              string: "Humans: %h"
+              },
+              mcbot: {
+              channel: null,
+              string: "Bots: %b"
+              }
+          }
+      };
       let temp;
       let edit;
 
@@ -130,7 +152,7 @@ module.exports = (bot) => {
             channel.editPermission(guild.id, 0, 0x00100000, "role", "Member count");
           }
 
-          bot.guildsettings[msg.channel.guild.id].membercount = settings;
+          bot.guildSettingsSet(msg.channel.guild.id, "membercount", settings);
 
           auditMembers(guild);
           countRefresh(guild);
@@ -166,8 +188,7 @@ module.exports = (bot) => {
                   "example: `Member Count: %m`"
                   );
               } else if (temp.length > 2 && temp.length < 95) {
-                bot._.set(settings, `channels.mc${edit.toLowerCase()}.string`, temp);
-                bot.guildsettings[guild.id].membercount = settings;
+                bot.guildSettingsSet(guild.id, `membercount.channels.mc${edit.toLowerCase()}.string`, temp);
                 countRefresh(guild);
               } else {
                 bot.send(msg, `\`${temp}\` is a shitty title, try again.`);
