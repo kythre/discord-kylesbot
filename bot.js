@@ -33,11 +33,6 @@ bot.secret = secret;
 bot.owner = "115340880117891072";
 bot.guildsettingsDefault = {
     prefix: "k!",
-    persist: {
-        nick: false,
-        roles: false
-    },
-    membercache: {},
     membercount: {
         counts: {
             bots: 0,

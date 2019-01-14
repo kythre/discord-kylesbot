@@ -18,29 +18,27 @@ module.exports = (bot) => {
       return;
     }
 
-    bot.guildsettings[guild.id].membercache[member.id] = {
+    bot.guildSettingsSet(guild.id, "membercache." + member.id, {
       nick: member.nick,
       roles: member.roles
-    };
+    });
   };
 
   bot.on("guildMemberRemove", cacheMember);
   bot.on("guildMemberUpdate", cacheMember);
 
-  bot.on("guildMemberAdd", async (guild, member) => {
-    if (member.bot) {
-      return;
-    }
+  bot.on("guildMemberAdd", (guild, member) => {
 
-    let guildsettings = bot.guildsettings[guild.id];
-    let membercache = guildsettings.membercache[member.id];
+    let persistNick = bot.guildSettingsGet(guild.id, "persist.nick");
+    let persistRoles = bot.guildSettingsGet(guild.id, "persist.roles");
+    let membercache = bot.guildSettingsGet(guild.id, "membercache." + member.id);
 
-    if (membercache && (guildsettings.persist.nick || guildsettings.persist.roles)) {
-      await setTimeout(async () => {
+    if (membercache && (persistNick || persistRoles)) {
+      setTimeout(() => {
         try {
-          await member.edit({
-            roles: guildsettings.persist.roles ? membercache.roles : member.roles,
-            nick: guildsettings.persist.nick ? membercache.nick : member.nick
+          member.edit({
+            roles: persistRoles ? membercache.roles : member.roles,
+            nick: persistNick ? membercache.nick : member.nick
           }, "Persist");
         } catch (err) {
           bot.error("Persists", err);
