@@ -87,7 +87,7 @@ module.exports = (bot) => {
       }
 
       bot.send(msg, "guild settings", "```js\n" + util.inspect(settings, {
-        depth: 1,
+        depth: 0,
         sorted: true,
         breakLength: 10
       }) + "```");
