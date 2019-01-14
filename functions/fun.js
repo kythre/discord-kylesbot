@@ -59,7 +59,7 @@ module.exports = (bot) => {
       description: "choosie woosie"
     },
     generator: (msg, args) => {
-      bot.send(msg, "Choose", (args[0] ? `\`\`\`js\n"${args.join(", ")}"\`\`\`\n` + args[~~(Math.random() * args.length)] : "fuck"));
+      bot.send(msg, "Choose", args[0] ? `\`\`\`js\n"${args.join(", ")}"\`\`\`\n` + args[~~(Math.random() * args.length)] : "yes");
     }
   });
 };
