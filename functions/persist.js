@@ -1,14 +1,16 @@
 module.exports = (bot) => {
-  bot.registerCommandConfig({
+  bot.registerCommandConfigBool({
     name: "persistroles",
     verbose: "role persist",
-    setting: "persist.roles"
+    setting: "persist.roles",
+    permission: "guild"
   });
 
-  bot.registerCommandConfig({
+  bot.registerCommandConfigBool({
     name: "persistnick",
     verbose: "nickname persist",
-    setting: "persist.nick"
+    setting: "persist.nick",
+    permission: "guild"
   });
 
   let cacheMember = function (guild, member) {
