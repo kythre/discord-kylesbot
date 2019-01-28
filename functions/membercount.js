@@ -1,5 +1,4 @@
 module.exports = (bot) => {
-
   let countRefresh = async function (guild) {
     let settings = bot.guildSettingsGet(guild.id, "membercount");
 

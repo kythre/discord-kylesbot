@@ -111,7 +111,7 @@ module.exports = (bot) => {
         settings = bot.usersettings[msg.author.id];
       }
 
-      bot.send(msg, "guild settings", "```js\n" + util.inspect(settings, {
+      bot.send(msg, "user settings", "```js\n" + util.inspect(settings, {
         depth: 1,
         sorted: true,
         breakLength: 10

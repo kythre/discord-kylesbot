@@ -48,7 +48,7 @@ module.exports = (bot) => {
       description: "magic 8 ball"
     },
     generator: (msg, args) => {
-      bot.send(msg, "Magic 8ball", (args[0] ? `\`\`\`js\n"${args.join(" ")}"\`\`\`\n` : "") + `${responses[~~(Math.random() * responses.length)]}`);
+      bot.send(msg, "Magic 8ball", (args[0] ? `\`\`\`js\n"${args.join(" ")}"\`\`\`\n` : "") + `\`\`\`fix\n${responses[~~(Math.random() * responses.length)]}\`\`\``);
     }
   });
 
@@ -60,8 +60,12 @@ module.exports = (bot) => {
       args: "[options]",
       description: "choosie woosie"
     },
-    generator: (msg, args) => {
-      bot.send(msg, "Choose", args[0] ? `\`\`\`js\n"${args.join(", ")}"\`\`\`\n` + args[~~(Math.random() * args.length)] : "yes");
+    generator: (msg, _args) => {
+      let args = _args[0] ? _args : [
+        "yes",
+        "no"
+      ];
+      bot.send(msg, "Choose", `\`\`\`js\n"${args.join("\", \"")}"\`\`\`\n\`\`\`fix\n${args[~~(Math.random() * args.length)]}\`\`\``);
     }
   });
 

@@ -1,15 +1,15 @@
 module.exports = (bot) => {
-  bot.registerCommand({
-    name: "cf",
-    category: "guild",
-    info: {
-      args: "[prefix flair] [postfix flair]",
-      description: "adds a flair to all channels"
-    },
-    generator: async (msg, args) => {
-      // complex channel flair
-    }
-  });
+  // bot.registerCommand({
+  //   name: "cf",
+  //   category: "guild",
+  //   info: {
+  //     args: "[prefix flair] [postfix flair]",
+  //     description: "adds a flair to all channels"
+  //   },
+  //   generator: async (msg, args) => {
+  //     // complex channel flair
+  //   }
+  // });
 
   bot.registerCommand({
     name: "cfs",

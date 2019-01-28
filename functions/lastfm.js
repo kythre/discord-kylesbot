@@ -19,7 +19,7 @@ module.exports = (bot) => {
               if (lastfmtrack) {
                 resolve(lastfmtrack);
               } else {
-                reject();
+                reject(data);
               }
             } catch (e) {
               console.error(e.message);
@@ -105,17 +105,17 @@ module.exports = (bot) => {
   });
 
   // bot currently playing status
-  setInterval(async () => {
-    let lastfmtrack = await getLastFMTrack(username).catch(() => {
-      console.log("lastfm playing status fuck up");
+  bot.lastfminterval = setInterval(() => {
+    getLastFMTrack(username).then((lastfmtrack) => {
+      if (!currenttrack || currenttrack.url !== lastfmtrack.url) {
+        currenttrack = lastfmtrack;
+        let status = currenttrack.name + " by " + currenttrack.artist["#text"];
+        bot.log.log("Setting to: " + status, "LastFM", "bgCyan", true);
+        bot.editStatus(bot.defaultStatus, {name: status,
+          type: 2});
+      }
+    }).catch(() => {
+      // fail
     });
-
-    if (!currenttrack || currenttrack.url !== lastfmtrack.url) {
-      currenttrack = lastfmtrack;
-      let status = currenttrack.name + " by " + currenttrack.artist["#text"];
-      bot.log.log("Setting to: " + status, "LastFM", "bgCyan", true);
-      bot.editStatus(bot.defaultStatus, {name: status,
-        type: 2});
-    }
   }, 30000);
 };

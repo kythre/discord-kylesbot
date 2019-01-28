@@ -18,12 +18,12 @@ module.exports = (bot) => {
         for (let i in bot.commands) {
           let cmd = bot.commands[i];
 
-          commandCategoryField[cmd.category] = commandCategoryField[cmd.category] || {
-            name: cmd.category,
+          commandCategoryField[cmd.description] = commandCategoryField[cmd.description] || {
+            name: cmd.description,
             value: ""
           };
 
-          commandCategoryField[cmd.category].value += " `" + cmd.name + "`";
+          commandCategoryField[cmd.description].value += " `" + cmd.label + "`";
         }
 
         for (let i in commandCategoryField) {
@@ -39,15 +39,15 @@ module.exports = (bot) => {
         }
 
         return bot.send(msg, "help", {
-          title: `${cmd.info.name || cmd.name + " command info"}`,
+          title: `${cmd.label + " command info"}`,
           fields: [
             {
               name: "description",
-              value: cmd.info.description
+              value: cmd.fullDescription
             },
             {
               name: "arguments",
-              value: cmd.info.args
+              value: cmd.usage
             }
           ]
         });
