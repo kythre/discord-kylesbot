@@ -20,7 +20,8 @@ module.exports = (bot) => {
 
           commandCategoryField[cmd.description] = commandCategoryField[cmd.description] || {
             name: cmd.description,
-            value: ""
+            value: "",
+            inline: true
           };
 
           commandCategoryField[cmd.description].value += " `" + cmd.label + "`";

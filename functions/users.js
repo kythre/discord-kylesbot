@@ -12,7 +12,6 @@ module.exports = (bot) => {
     bot._.set(bot.usersettings, `${userID}.tags`, userTags);
   };
 
-
   let remTag = function (userID, tag) {
     let userTags = bot._.get(bot.usersettings, `${userID}.tags`) || [];
     if (Array.isArray(tag)) {
@@ -52,14 +51,14 @@ module.exports = (bot) => {
   bot.commands.push(new bot.eris.Command("taguser", (msg, args) => tag(msg, args, true), {
     fullDescription: "tag a bitch",
     guildOnly: true,
-    description: "dev",
+    description: "bot owner",
     requirements: {userIDs: [bot.owner]}
   }));
 
   bot.commands.push(new bot.eris.Command("untaguser", (msg, args) => tag(msg, args, false), {
     fullDescription: "untag a bitch",
     guildOnly: true,
-    description: "dev",
+    description: "bot owner",
     requirements: {userIDs: [bot.owner]}
   }));
 };

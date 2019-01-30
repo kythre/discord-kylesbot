@@ -19,10 +19,10 @@ module.exports = (bot) => {
               if (lastfmtrack) {
                 resolve(lastfmtrack);
               } else {
-                reject(data);
+                reject(new Error("no tracks found"));
               }
             } catch (e) {
-              console.error(e.message);
+              // fuck
             }
         });
       });
@@ -72,7 +72,8 @@ module.exports = (bot) => {
       if (lastfmusername) {
         let nmsg = await bot.send(msg, "LastFM", "wait a sec");
         let lastfmtrack = await getLastFMTrack(lastfmusername).catch((e) => {
-          bot.edit(nmsg, "LastFM", e || "nothing to show");
+          console.log(e)
+          bot.edit(nmsg, "LastFM", e.message || "nothing to show");
         });
         if (lastfmtrack) {
           sendNP(nmsg, lastfmusername, lastfmtrack);
