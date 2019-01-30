@@ -30,39 +30,6 @@ bot.usersettings = require("./data/users.json");
 bot.eris = Eris;
 bot.commands = [];
 bot.commandAliases = {};
-bot.reactionActions = {
-    cancel: async (msg) => {
-        bot.unwatchMessage(msg.id, msg.channel.id);
-    },
-    edit: (msg, action, userID) => {
-        msg.removeReaction(action.emoji, userID).catch(() => {
-            // catch
-        });
-
-        let resp;
-
-        if (Array.isArray(action.response)) {
-          resp = action.response[Math.floor(Math.random() * action.response.length)];
-        }
-
-        if (typeof action.response === "string") {
-          resp = action.response;
-        }
-
-        if (resp !== null) {
-            bot.editMessage(msg.channel.id, msg.id, resp);
-        }
-    },
-    role: async (msg, action, userID) => {
-        const member = msg.channel.guild.members.get(userID);
-
-        if (member.roles.includes(action.response)) {
-            member.removeRole(action.response);
-        } else {
-            member.addRole(action.response);
-        }
-    }
-};
 bot.isReady = false;
 bot.log = log;
 bot.fs = fs;
@@ -74,47 +41,6 @@ bot.guildsettingsDefault = {
 };
 bot.defaultStatus = "online";
 bot.color = 46847;
-bot.onMessageReactionEvent = async function (msg_, emoji_, userID) {
-    if (!bot.ready || userID === bot.user.id) {
-        return;
-    }
-
-    if (bot.activeMessages[msg_.id]) {
-        const emoji = emoji_.id ? `${emoji_.name}:${emoji_.id}` : emoji_.name;
-        let msg = msg_;
-
-        if (!(msg.content || msg.embeds || msg.attachments)) {
-            msg = await bot.getMessage(msg.channel.id, msg.id);
-        }
-
-        let activeMessage = bot.activeMessages[msg.id];
-        msg.command = bot.commands[activeMessage.command];
-        let reactionButtons = msg.command.reactionButtons;
-        const action = reactionButtons.find((button) => button.emoji === emoji);
-
-        if (!action) {
-            return;
-        }
-
-        try {
-            await bot.reactionActions[action.type](msg, action, userID);
-        } catch (err) {} // eslint-disable-line no-empty
-    }
-};
-bot.unwatchMessage = function (id, channelID) {
-    delete bot.activeMessages[id];
-    if (channelID) {
-        bot.removeMessageReactions(channelID, id).catch(() => {
-            bot.getMessage(channelID, id).then((msg) => {
-                for (let i in msg.reactions) {
-                    if (msg.reactions[i].me) {
-                        msg.removeReaction(i);
-                    }
-                }
-            });
-        });
-    }
-};
 bot.registerCommandConfigStr({
     name: "setprefix",
     verbose: "bot prefix",
@@ -158,16 +84,13 @@ bot.on("ready", async () => {
     log.ready(bot);
 });
 
-bot.on("messageReactionAdd", bot.onMessageReactionEvent);
-bot.on("messageReactionRemove", bot.onMessageReactionEvent);
-
 bot.on("guildCreate", async (guild) => {
     log.log(`"${guild.name}"`, "Guild join");
 });
 
 bot.on("messageDelete", (msg) => {
-    if (bot.activeMessages[msg.id]) {
-        delete bot.activeMessages[msg.id];
+    if (bot.activeMessages[msg.channel.guild.id] && bot.activeMessages[msg.channel.guild.id][msg.id]) {
+        delete bot.activeMessages[msg.channel.guild.id][msg.id];
     }
 });
 
@@ -216,13 +139,14 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
+    msg.command = command;
+
+    // if user is blacklisted
     if ((bot._.get(bot.usersettings, `${msg.author.id}.tags`) || []).includes("blacklisted")) {
         bot.commandDeny(msg, "USER_BLACKLISTED");
         return;
     }
     
-    msg.command = command;
-
     // if command is currently being processed
     if (msg.channel.cmdrunning) {
         bot.commandDeny(msg, "CURRENTLY_RUNNING");
@@ -244,6 +168,7 @@ bot.on("messageCreate", async (msg) => {
     let args = msg.content.slice(prefix.length + command.label.length);
 
     // gross
+    // split args unless the command needs the args together
     if (command.label === "eval" || command.label === "say") {
         args = args.split(" ").slice(1);
     } else {
@@ -271,7 +196,7 @@ bot.on("messageCreate", async (msg) => {
                 command.reactionButtons.forEach((button) => {
                     resp.addReaction(button.emoji);
                 });
-                bot.activeMessages[resp.id] = {
+                bot.activeMessages[resp.channel.guild.id][resp.id] = {
                     args,
                     command: command.label
                 };
@@ -299,4 +224,5 @@ bot.on("messageCreate", async (msg) => {
 
    // msg.channel.cmdrunning = false;
 });
+
 bot.connect().catch((err) => log.err(err, "Login"));
