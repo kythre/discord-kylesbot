@@ -189,6 +189,11 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
+    if ((bot._.get(bot.usersettings, `${msg.author.id}.tags`) || []).includes("blacklisted")) {
+        bot.commandDeny(msg, "USER_BLACKLISTED");
+        return;
+    }
+
     let guild = msg.channel.guild ? msg.channel.guild : "";
     let prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettingsGet(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildsettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
