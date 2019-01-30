@@ -1,9 +1,8 @@
-const moment = require("moment");
-const Command = require("eris").Command;
-
 // global economy with guild economy features for some reason
 
 module.exports = (bot) => {
+  const moment = require("moment");
+
   // bot.registerCommandConfigInt({
   //   name: "setdaily",
   //   verbose: "amount for daily grabs",
@@ -18,12 +17,12 @@ module.exports = (bot) => {
     permission: "guild"
   });
 
-  bot.commands.push(new Command("timely", (msg) => {
+  bot.commands.push(new bot.eris.Command("timely", (msg) => {
     // const oneDay = 8.64e+7;
     const oneHour = 3.6e+6;
     const userId = msg.author.id;
     const guildID = msg.channel.guild.id;
-    const nextGet = (bot.userSettingsGet(userId, "economy.lastget") || 0) + oneHour * 2;
+    const nextGet = (bot.userSettingsGet(userId, "economy.lastget") || 0) + oneHour * 5;
     const currency = bot.guildSettingsGet(guildID, "economy.currency") || "fucks";
 
     if (nextGet < Date.now()) {
@@ -42,7 +41,7 @@ module.exports = (bot) => {
     description: "economy"
   }));
 
-  bot.commands.push(new Command("worth", (msg) => {
+  bot.commands.push(new bot.eris.Command("worth", (msg) => {
     let userId = msg.author.id;
     let username = msg.author.username;
 
@@ -75,7 +74,7 @@ module.exports = (bot) => {
   ]
   }));
 
-  bot.commands.push(new Command("bf", (msg, args) => {
+  bot.commands.push(new bot.eris.Command("bf", (msg, args) => {
     const userId = msg.author.id;
     const guildID = msg.channel.guild.id;
     const currency = bot.guildSettingsGet(guildID, "economy.currency") || "fucks";
@@ -105,7 +104,7 @@ module.exports = (bot) => {
     description: "economy"
   }));
 
-  bot.commands.push(new Command("give", (msg, args) => {
+  bot.commands.push(new bot.eris.Command("give", (msg, args) => {
     const userId = msg.author.id;
     const guildID = msg.channel.guild.id;
     const currency = bot.guildSettingsGet(guildID, "economy.currency") || "fucks";

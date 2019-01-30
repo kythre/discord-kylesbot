@@ -24,6 +24,9 @@ process.on("exit", async (code) => {
 process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection", "Bot"));
 process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception", "Bot"));
 
+bot.activeMessages = require("./data/activeMessages.json");
+bot.guildsettings = require("./data/guilds.json");
+bot.usersettings = require("./data/users.json");
 bot.eris = Eris;
 bot.commands = [];
 bot.commandAliases = {};
@@ -60,7 +63,6 @@ bot.reactionActions = {
         }
     }
 };
-bot.activeMessages = require("./data/activeMessages.json");
 bot.isReady = false;
 bot.log = log;
 bot.fs = fs;
@@ -70,8 +72,6 @@ bot.owner = "115340880117891072";
 bot.guildsettingsDefault = {
     prefix: "k!"
 };
-bot.guildsettings = require("./data/guilds.json");
-bot.usersettings = require("./data/users.json");
 bot.defaultStatus = "online";
 bot.color = 46847;
 bot.onMessageReactionEvent = async function (msg_, emoji_, userID) {
@@ -115,13 +115,12 @@ bot.unwatchMessage = function (id, channelID) {
         });
     }
 };
-
 bot.registerCommandConfigStr({
     name: "setprefix",
     verbose: "bot prefix",
     setting: "prefix",
     permission: "guild"
-  });
+});
 
 bot.on("warn", (msg) => log.warn(msg));
 bot.on("error", (err) => log.err(err, "Bot"));

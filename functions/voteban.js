@@ -1,5 +1,6 @@
 module.exports = (bot) => {
 
+  // voteban command, written largely by edan
   bot.registerCommand({
     name: "voteban",
     category: "guild",
