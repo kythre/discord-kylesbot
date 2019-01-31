@@ -33,7 +33,10 @@ module.exports = (bot) => {
       }
 
       if (args[0]) {
-        let cmd = bot.commands[args[0]];
+        const cmd = bot.commands.find((cmd_) => {
+          let cmdName = args[0];
+          return cmd_.label === cmdName || cmd_.aliases.find((alias) => alias === cmdName);
+      });
 
         if (!cmd) {
           return msg.channel.createMessage("what?");

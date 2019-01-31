@@ -17,6 +17,38 @@ module.exports = (bot) => {
     permission: "guild"
   });
 
+  bot.commands.push(new bot.eris.Command("lb", (msg) => {
+    const guildID = msg.channel.guild.id;
+    const currency = bot.guildSettingsGet(guildID, "economy.currency") || "fucks";
+    let lb = {};
+    for (let a in bot.usersettings) {
+      let value = bot._.get(bot.usersettings[a], "economy.value");
+      if (value && bot.users.get(a)) {
+        lb[bot.users.get(a).username + "#" + bot.users.get(a).discriminator] = value;
+      }
+    }
+    lb = Object.entries(lb).sort((a, b) => b[1] - a[1]);
+    while (lb.length > 10) {
+      lb.pop();
+    }
+    let num = 0;
+    lb = lb.map((e) => {
+      num++;
+      return {
+        "name": `#${num} ${e[0]}`,
+        "value": `${e[1]} ${currency}`,
+        "inline": true
+      };
+    });
+    return bot.send(msg, currency + " Leaderboard", {
+      "fields": lb
+    });
+  }, {
+    fullDescription: "gives you your daily currency",
+    guildOnly: true,
+    description: "economy"
+  }));
+
   bot.commands.push(new bot.eris.Command("timely", (msg) => {
     // const oneDay = 8.64e+7;
     const oneHour = 3.6e+6;
@@ -69,9 +101,9 @@ module.exports = (bot) => {
     guildOnly: true,
     description: "economy",
     aliases: [
-    "$",
-    "value"
-  ]
+      "$",
+      "value"
+    ]
   }));
 
   bot.commands.push(new bot.eris.Command("bf", (msg, args) => {
