@@ -72,7 +72,6 @@ module.exports = (bot) => {
       if (lastfmusername) {
         let nmsg = await bot.send(msg, "LastFM", "wait a sec");
         let lastfmtrack = await getLastFMTrack(lastfmusername).catch((e) => {
-          console.log(e)
           bot.edit(nmsg, "LastFM", e.message || "nothing to show");
         });
         if (lastfmtrack) {
