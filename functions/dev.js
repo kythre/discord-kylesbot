@@ -106,7 +106,7 @@ module.exports = (bot) => {
       let settings;
 
       if (args[0]) {
-        settings = bot._.get(bot.usersettings[msg.author.id], args[0]);
+        settings = bot.usersettings[args[0]];
       } else {
         settings = bot.usersettings[msg.author.id];
       }
