@@ -112,8 +112,8 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
-    let guild = msg.channel.guild ? msg.channel.guild : "";
-    let prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettingsGet(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildsettingsDefault.prefix}))\\s?`, "gi");
+    const guild = msg.channel.guild ? msg.channel.guild : "";
+    const prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettingsGet(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildsettingsDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 
@@ -122,8 +122,11 @@ bot.on("messageCreate", async (msg) => {
     }
 
      // const command = bot.commands[msg.content.slice(prefix.length).toLowerCase().split(" ")[0]];
+    const cmdName = msg.content.slice(prefix.length).toLowerCase().split(" ")[0];
+    if (!cmdName) {
+        return;
+    }
     const command = bot.commands.find((cmd) => {
-        let cmdName = msg.content.slice(prefix.length).toLowerCase().split(" ")[0];
         return cmd.label === cmdName || cmd.aliases.find((alias) => alias === cmdName);
     });
 
