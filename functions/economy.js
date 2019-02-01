@@ -31,8 +31,9 @@ module.exports = (bot) => {
 
     lb = Object.entries(lb).sort((a, b) => b[1] - a[1]);
 
+    const entriesPerPage = 10;
     let page = 0;
-    let lastPage = Math.ceil(lb.length / 10) - 1;
+    let lastPage = Math.ceil(lb.length / entriesPerPage) - 1;
 
     if (args[0]) {
       if (args[0].match(/^[0-9]+$/)) {
@@ -40,7 +41,7 @@ module.exports = (bot) => {
       } else {
         lb.find((a, b) => {
           if (a[0].toLowerCase().includes(args[0].toLowerCase())) {
-            page = Math.ceil(b / 10);
+            page = Math.ceil(b / entriesPerPage);
             return a;
           }
         });
@@ -53,23 +54,23 @@ module.exports = (bot) => {
 
     page = Math.min(lastPage, page);
 
-    for (let i = 0; i < page * 10; i++) {
+    for (let i = 0; i < page * entriesPerPage; i++) {
       lb.shift();
     }
 
-    while (lb.length > 10) {
+    while (lb.length > entriesPerPage) {
       lb.pop();
     }
-    let num = page * 10;
+    let num = page * entriesPerPage;
     lb = lb.map((e) => {
       num++;
       return {
         "name": `#${num} ${e[0]}`,
         "value": `${e[1]}${currency}`,
-        "inline": true
+        "inline": false
       };
     });
-    return bot.send(msg, `${currency} Leaderboard [Page ${page + 1}]`, {
+    return bot.send(msg, `${currency} Leaderboard [Page ${page + 1}/${lastPage + 1}]`, {
       "fields": lb
     });
   }, {
@@ -83,7 +84,7 @@ module.exports = (bot) => {
     const oneHour = 3.6e+6;
     const userId = msg.author.id;
     const guildID = msg.channel.guild.id;
-    const nextGet = (bot.userSettingsGet(userId, "economy.lastget") || 0) + oneHour * 5;
+    const nextGet = (bot.userSettingsGet(userId, "economy.lastget") || 0) + oneHour * 2;
     const currency = bot.guildSettingsGet(guildID, "economy.currency") || "fucks";
 
     if (nextGet < Date.now()) {
@@ -144,7 +145,7 @@ module.exports = (bot) => {
     if (args[0] && args[0].match(/^[0-9]+|(all)$/) && args[0] !== "0" && args[1] && args[1].match(/h|t/i)) {
       const betAmount = args[0] === "all" ? worth : parseInt(args[0], 10);
       const betOn = args[1] === "h";
-      let outcome = Math.floor(Math.random() * 2);
+      const outcome = Math.random() * 1000 <= 499;
 
       if (betAmount > worth && betAmount > 0) {
         return bot.send(msg, msg.author.username + " is too poor for this bet");
