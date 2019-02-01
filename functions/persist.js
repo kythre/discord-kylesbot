@@ -43,7 +43,7 @@ module.exports = (bot) => {
         } catch (err) {
           bot.error("Persists", err);
         }
-      }, 250);
+      }, 1000);
     }
   });
 };
