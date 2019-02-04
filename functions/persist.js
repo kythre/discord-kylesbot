@@ -18,7 +18,7 @@ module.exports = (bot) => {
       return;
     }
 
-    bot.guildSettingsSet(guild.id, "membercache." + member.id, {
+    bot.guildData.set(guild.id, "membercache." + member.id, {
       nick: member.nick,
       roles: member.roles
     });
@@ -26,12 +26,14 @@ module.exports = (bot) => {
 
   bot.on("guildMemberRemove", cacheMember);
   bot.on("guildMemberUpdate", cacheMember);
-
   bot.on("guildMemberAdd", (guild, member) => {
 
-    let persistNick = bot.guildSettingsGet(guild.id, "persist.nick");
-    let persistRoles = bot.guildSettingsGet(guild.id, "persist.roles");
-    let membercache = bot.guildSettingsGet(guild.id, "membercache." + member.id);
+    let persistNick = bot.guildData.get(guild.id, "persist.nick");
+    let persistRoles = bot.guildData.get(guild.id, "persist.roles");
+    let membercache = bot.guildData.get(guild.id, [
+      "membercache",
+      member.id
+    ]);
 
     if (membercache && (persistNick || persistRoles)) {
       setTimeout(() => {

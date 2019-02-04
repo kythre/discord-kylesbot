@@ -1,6 +1,6 @@
 module.exports = (bot) => {
   let countRefresh = async function (guild) {
-    let settings = bot.guildSettingsGet(guild.id, "membercount");
+    let settings = bot.guildData.get(guild.id, "membercount");
 
     if (!settings) {
       return;
@@ -24,14 +24,14 @@ module.exports = (bot) => {
             console.log(err);
           });
         } else {
-          // bot.guildsettings[guild.id].membercount.channels[i].channel = null;
+          // bot.guildData[guild.id].membercount.channels[i].channel = null;
         }
       }
     }
   };
 
   let auditMembers = function (guild) {
-    let settings = bot.guildSettingsGet(guild.id, "membercount");
+    let settings = bot.guildData.get(guild.id, "membercount");
 
     if (!settings) {
       return;
@@ -50,11 +50,11 @@ module.exports = (bot) => {
       }
     });
 
-    bot.guildSettingsSet(guild.id, "membercount", settings);
+    bot.guildData.set(guild.id, "membercount", settings);
   };
 
   bot.on("guildMemberRemove", (guild, member) => {
-    let counts = bot.guildSettingsGet(guild.id, "membercount.counts");
+    let counts = bot.guildData.get(guild.id, "membercount.counts");
 
     if (member.bot) {
       counts.bot -= 1;
@@ -62,12 +62,12 @@ module.exports = (bot) => {
       counts.humans -= 1;
     }
 
-    bot.guildSettingsSet(guild.id, "membercount.counts", counts);
+    bot.guildData.set(guild.id, "membercount.counts", counts);
     countRefresh(guild);
   });
 
   bot.on("guildMemberAdd", (guild, member) => {
-    let counts = bot.guildSettingsGet(guild.id, "membercount.counts");
+    let counts = bot.guildData.get(guild.id, "membercount.counts");
 
     if (member.bot) {
       counts.bot += 1;
@@ -75,7 +75,7 @@ module.exports = (bot) => {
       counts.humans += 1;
     }
 
-    bot.guildSettingsSet(guild.id, "membercount.counts", counts);
+    bot.guildData.set(guild.id, "membercount.counts", counts);
     countRefresh(guild);
   });
 
@@ -97,7 +97,7 @@ module.exports = (bot) => {
       }
 
       let guild = msg.channel.guild;
-      let settings = bot.guildSettingsGet(guild.id, "membercount") || {
+      let settings = bot.guildData.get(guild.id, "membercount") || {
           counts: {
               bots: 0,
               humans: 0
@@ -151,7 +151,7 @@ module.exports = (bot) => {
             channel.editPermission(guild.id, 0, 0x00100000, "role", "Member count");
           }
 
-          bot.guildSettingsSet(msg.channel.guild.id, "membercount", settings);
+          bot.guildData.set(msg.channel.guild.id, "membercount", settings);
 
           auditMembers(guild);
           countRefresh(guild);
@@ -187,7 +187,7 @@ module.exports = (bot) => {
                   "example: `Member Count: %m`"
                   );
               } else if (temp.length > 2 && temp.length < 95) {
-                bot.guildSettingsSet(guild.id, `membercount.channels.mc${edit.toLowerCase()}.string`, temp);
+                bot.guildData.set(guild.id, `membercount.channels.mc${edit.toLowerCase()}.string`, temp);
                 countRefresh(guild);
               } else {
                 bot.send(msg, `\`${temp}\` is a shitty title, try again.`);

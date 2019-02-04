@@ -68,7 +68,7 @@ module.exports = (bot) => {
       description: "shows the track you or someone else is playing"
     },
     generator: async (msg, args) => {
-      let lastfmusername = args[0] || bot._.get(bot.usersettings, msg.author.id + ".lastfm");
+      const lastfmusername = args[0] || bot.userData.get(msg.author.id, "lastfm");
       if (lastfmusername) {
         let nmsg = await bot.send(msg, "LastFM", "wait a sec");
         let lastfmtrack = await getLastFMTrack(lastfmusername).catch((e) => {
@@ -84,7 +84,7 @@ module.exports = (bot) => {
   });
 
   let currenttrack;
-  let username = "kylr_1";
+  const username = "kylr_1";
 
   // np: bot lastfm song command
   bot.registerCommand({

@@ -1,7 +1,6 @@
 module.exports = (bot) => {
   let addTag = function (userID, tag) {
-    let userTags = bot._.get(bot.usersettings, `${userID}.tags`) || [];
-
+    let userTags = bot.userData.get(userID, "tags") || [];
     if (Array.isArray(tag)) {
       for (let i in tag) {
         userTags.push(tag[i]);
@@ -9,11 +8,11 @@ module.exports = (bot) => {
     } else {
       userTags.push(tag);
     }
-    bot._.set(bot.usersettings, `${userID}.tags`, userTags);
+    bot.userData.set(userID, "tags", userTags);
   };
 
   let remTag = function (userID, tag) {
-    let userTags = bot._.get(bot.usersettings, `${userID}.tags`) || [];
+    let userTags = bot.userData.get(userID, "tags") || [];
     if (Array.isArray(tag)) {
       for (let i in tag) {
         userTags = userTags.filter((value) => value !== tag[i]);
@@ -21,7 +20,7 @@ module.exports = (bot) => {
     } else {
       userTags = userTags.filter((value) => value !== tag);
     }
-    bot._.set(bot.usersettings, `${userID}.tags`, userTags);
+    bot.userData.set(userID, "tags", userTags);
   };
 
   let tag = function (msg, args, operation) {
@@ -48,17 +47,17 @@ module.exports = (bot) => {
     return bot.send(msg, msg.author.username + ", ya dumb");
   };
 
-  bot.commands.push(new bot.eris.Command("taguser", (msg, args) => tag(msg, args, true), {
+  bot.registerCommand("taguser", (msg, args) => tag(msg, args, true), {
     fullDescription: "tag a bitch",
     guildOnly: true,
     description: "bot owner",
     requirements: {userIDs: [bot.owner]}
-  }));
+  });
 
-  bot.commands.push(new bot.eris.Command("untaguser", (msg, args) => tag(msg, args, false), {
+  bot.registerCommand("untaguser", (msg, args) => tag(msg, args, false), {
     fullDescription: "untag a bitch",
     guildOnly: true,
     description: "bot owner",
     requirements: {userIDs: [bot.owner]}
-  }));
+  });
 };

@@ -24,9 +24,60 @@ process.on("exit", async (code) => {
 process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection", "Bot"));
 process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception", "Bot"));
 
-bot.activeMessages = require("./data/activeMessages.json");
-bot.guildsettings = require("./data/guilds.json");
-bot.usersettings = require("./data/users.json");
+// settings getters should have a default arguemnt that combines with the saved settings using lodash defaultsdeep
+bot.globalData = {
+    raw: require("./data/global.json"),
+    get (id, path) {
+        if (typeof path === "undefined") {
+            return this.raw[id];
+        }
+        return bot._.get(this.raw[id], path) || bot._.get({
+            // defaults
+        }, path);
+    },
+    set (id, path, value) {
+        if (typeof value === "undefined") {
+            throw new Error("attempt to set guild setting to undefined");
+        }
+        this.raw[id] = this.raw[id] || {};
+        bot._.set(this.raw[id], path, value);
+    }
+};
+bot.guildData = {
+    raw: require("./data/guilds.json"),
+    get (id, path) {
+        if (typeof path === "undefined") {
+            return this.raw[id];
+        }
+        return bot._.get(this.raw[id], path) || bot._.get({
+            prefix: "k!"
+        }, path);
+    },
+    set (id, path, value) {
+        if (typeof value === "undefined") {
+            throw new Error("attempt to set guild setting to undefined");
+        }
+        this.raw[id] = this.raw[id] || {};
+        bot._.set(this.raw[id], path, value);
+    }
+};
+bot.userData = {
+    raw: require("./data/users.json"),
+    get (id, path) {
+        if (typeof path === "undefined") {
+            return this.raw[id];
+        }
+        return bot._.get(this.raw[id], path);
+    },
+    set (id, path, value) {
+        if (typeof value === "undefined") {
+            throw new Error("attempt to set guild setting to undefined");
+        }
+        this.raw[id] = this.raw[id] || {};
+        bot._.set(this.raw[id], path, value);
+    }
+};
+bot.getCommand = (cmdName) => bot.commands.find((cmd) => cmd.label === cmdName || cmd.aliases.find((alias) => alias === cmdName));
 bot.eris = Eris;
 bot.commands = [];
 bot.commandAliases = {};
@@ -36,9 +87,6 @@ bot.fs = fs;
 bot._ = _;
 bot.secret = secret;
 bot.owner = "115340880117891072";
-bot.guildsettingsDefault = {
-    prefix: "k!"
-};
 bot.defaultStatus = "online";
 bot.color = 46847;
 bot.registerCommandConfigStr({
@@ -89,8 +137,11 @@ bot.on("guildCreate", async (guild) => {
 });
 
 bot.on("messageDelete", (msg) => {
-    if (bot.activeMessages[msg.channel.guild.id] && bot.activeMessages[msg.channel.guild.id][msg.id]) {
-        delete bot.activeMessages[msg.channel.guild.id][msg.id];
+    if (bot.globalData.get("activeMessages", [
+        msg.channel.id,
+        msg.id
+    ])) {
+        bot.unwatchMessage(msg.channel.id, msg.id);
     }
 });
 
@@ -113,7 +164,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     const guild = msg.channel.guild ? msg.channel.guild : "";
-    const prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildSettingsGet(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildsettingsDefault.prefix}))\\s?`, "gi");
+    const prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildData.get(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildDataDefault.prefix}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 
@@ -126,9 +177,7 @@ bot.on("messageCreate", async (msg) => {
     if (!cmdName) {
         return;
     }
-    const command = bot.commands.find((cmd) => {
-        return cmd.label === cmdName || cmd.aliases.find((alias) => alias === cmdName);
-    });
+    const command = bot.getCommand(cmdName);
 
     if (!command) {
         if (guild) {
@@ -145,7 +194,7 @@ bot.on("messageCreate", async (msg) => {
     msg.command = command;
 
     // if user is blacklisted
-    if ((bot._.get(bot.usersettings, `${msg.author.id}.tags`) || []).includes("blacklisted")) {
+    if ((bot._.get(bot.userData, `${msg.author.id}.tags`) || []).includes("blacklisted")) {
         bot.commandDeny(msg, "USER_BLACKLISTED");
         return;
     }
@@ -199,10 +248,17 @@ bot.on("messageCreate", async (msg) => {
                 command.reactionButtons.forEach((button) => {
                     resp.addReaction(button.emoji);
                 });
-                bot.activeMessages[resp.channel.guild.id][resp.id] = {
+                bot.globalData.set("activeMessages", [
+                    resp.channel.id,
+                    resp.id
+                ], {
                     args,
-                    command: command.label
-                };
+                    command: command.label,
+                    timeout: command.reactionButtonTimeout === -1 ? null : Date.now() + command.reactionButtonTimeout
+                });
+                if (command.reactionButtonTimeout !== -1) {
+                    setTimeout(() => bot.unwatchMessage(resp.channel.id, resp.id), command.reactionButtonTimeout);
+                }
             }
         }
     } catch (err) {

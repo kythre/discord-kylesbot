@@ -4,7 +4,7 @@ module.exports = (bot) => {
       // catch
     });
     msg.channel.getMessages(args[0] || 20).then((msgs) => {
-      msgs.filter((m) => m.author.id === bot.user.id || m.content.startsWith(bot.guildSettingsGet(m.channel.guild.id, "prefix"))).map((m) => m.delete().catch(() => {
+      msgs.filter((m) => m.author.id === bot.user.id || m.content.startsWith(bot.guildData.get(m.channel.guild.id, "prefix"))).map((m) => m.delete().catch(() => {
         // catch
       }));
     });

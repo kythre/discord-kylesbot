@@ -33,10 +33,7 @@ module.exports = (bot) => {
       }
 
       if (args[0]) {
-        const cmd = bot.commands.find((cmd_) => {
-          let cmdName = args[0];
-          return cmd_.label === cmdName || cmd_.aliases.find((alias) => alias === cmdName);
-      });
+        const cmd = bot.getCommand(args[0]);
 
         if (!cmd) {
           return msg.channel.createMessage("what?");
@@ -58,7 +55,7 @@ module.exports = (bot) => {
       }
 
       return bot.send(msg, "help", {
-        description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guildSettingsGet(msg.channel.guild.id, "prefix") : ""}help [command name]\``,
+        description: `To get "in depth" details for commands, do \`${msg.channel.guild ? bot.guildData.get(msg.channel.guild.id, "prefix") : ""}help [command name]\``,
         fields: commandCategoryFields
       });
     }

@@ -48,7 +48,7 @@ module.exports = (bot) => {
       description: "magic 8 ball"
     },
     generator: (msg, args) => {
-      bot.send(msg, "Magic 8ball", (args[0] ? `\`\`\`js\n"${args.join(" ")}"\`\`\`\n` : "") + `\`\`\`fix\n${responses[~~(Math.random() * responses.length)]}\`\`\``);
+      bot.send(msg, "Magic 8ball", (args[0] ? `\`\`\`yaml\n${args.join(" ")}\`\`\`\n` : "") + `\`\`\`fix\n${responses[~~(Math.random() * responses.length)]}\`\`\``);
     }
   });
 
@@ -65,7 +65,7 @@ module.exports = (bot) => {
         "yes",
         "no"
       ];
-      bot.send(msg, "Choose", `\`\`\`js\n"${args.join("\", \"")}"\`\`\`\n\`\`\`fix\n${args[~~(Math.random() * args.length)]}\`\`\``);
+      bot.send(msg, "Choose", `\`\`\`yaml\n"${args.join("\", \"")}"\`\`\`\n\`\`\`fix\n${args[~~(Math.random() * args.length)]}\`\`\``);
     }
   });
 
@@ -83,7 +83,7 @@ module.exports = (bot) => {
       return;
     }
 
-    if (!bot.guildSettingsGet(msg.channel.guild.id, "dad")) {
+    if (!bot.guildData.get(msg.channel.guild.id, "dad")) {
       return;
     }
 

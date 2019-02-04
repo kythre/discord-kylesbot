@@ -81,9 +81,9 @@ module.exports = (bot) => {
       let settings;
 
       if (args[0]) {
-        settings = bot._.get(bot.guildsettings[msg.channel.guild.id], args[0]);
+        settings = bot.guildData.get(msg.channel.guild.id, args[0]);
       } else {
-        settings = bot.guildsettings[msg.channel.guild.id];
+        settings = bot.guildData.get(msg.channel.guild.id);
       }
 
       bot.send(msg, "guild settings", "```js\n" + util.inspect(settings, {
@@ -106,9 +106,9 @@ module.exports = (bot) => {
       let settings;
 
       if (args[0]) {
-        settings = bot.usersettings[args[0]];
+        settings = bot.userData.get(args[0]);
       } else {
-        settings = bot.usersettings[msg.author.id];
+        settings = bot.userData.get(msg.author.id);
       }
 
       bot.send(msg, "user settings", "```js\n" + util.inspect(settings, {
