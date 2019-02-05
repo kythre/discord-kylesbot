@@ -36,28 +36,19 @@ module.exports = (bot) => {
       bot.userData.set(trans_.to, [
         "economy",
         "transactions",
-         Date.now()
-      ], [
-        trans_.amount,
-        trans_.method,
-        trans_.reason,
-        trans_.from
-      ]);
+         Date.now().toString()
+      ], trans_);
     }
 
     if (trans_.from) {
+      trans_.amount *= -1;
       const worth = bot.userData.get(trans_.from, "economy.value");
-      bot.userData.set(trans_.from, "economy.value", worth - trans_.amount);
+      bot.userData.set(trans_.from, "economy.value", worth + trans_.amount);
       bot.userData.set(trans_.from, [
         "economy",
         "transactions",
-         Date.now()
-      ], [
-        -trans_.amount,
-        trans_.method,
-        trans_.reason,
-        trans_.to
-      ]);
+         Date.now().toString()
+      ], trans_);
     }
   };
 
