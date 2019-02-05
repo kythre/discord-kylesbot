@@ -100,10 +100,7 @@ module.exports = {
             }
         ],
         "line-comment-position": "error",
-        "linebreak-style": [
-            "error",
-            "windows"
-        ],
+        "linebreak-style": "off",
         "lines-around-comment": "error",
         "lines-around-directive": "error",
         "lines-between-class-members": "error",
