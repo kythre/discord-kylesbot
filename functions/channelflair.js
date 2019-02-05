@@ -78,15 +78,36 @@ module.exports = (bot) => {
             if (channel.permissionsOf(bot.user.id).has("readMessages")) {
               if (addingFlair) {
                 whatido.can += `'${channel.name}' -> '${preFlair + channel.name + postFlair}'\n`;
+                whatido.channels.push(channel);
               } else {
-                whatido.can += `'${channel.name}' -> '${channel.name.substring(preFlair.length, channel.name.length - postFlair.length)}'\n`;
+                // whatido.can += `'${channel.name}' -> '${channel.name.substring(preFlair.length, channel.name.length - postFlair.length)}'\n`;
+                // whatido.channels.push(channel)
+
+                let newname = channel.name;
+                if (newname.startsWith(preFlair)) {
+                  newname = newname.substring(preFlair.length, newname.length);
+                }
+
+                if (newname.endsWith(postFlair)) {
+                  newname = newname.substring(0, newname.length - postFlair.length);
+                }
+
+                if (channel.name !== newname) {
+                  whatido.can += `'${channel.name}' -> '${newname}'\n`;
+                  whatido.channels.push(channel);
+                }
               }
-              whatido.channels.push(channel);
             } else {
               whatido.cant += `'${channel.name}'\n`;
             }
           }
         }
+
+      }
+
+      if (whatido.channels.length === 0) {
+        bot.send(nmsg, "simple channel flair", "nothing to change");
+        return;
       }
 
       bot.edit(nmsg, "simple channel flair", {
