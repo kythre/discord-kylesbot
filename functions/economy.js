@@ -18,8 +18,18 @@ module.exports = (bot) => {
   // }
 
   const transact = function (trans_) {
+    const time = Date.now().toString();
+
     if (!trans_.to && !trans_.from) {
       throw new Error("failed transfer, no users given");
+    }
+
+    if (trans_.amount === "all") {
+      if (trans_.from) {
+        trans_.amount = bot.userData.get(trans_.from, "economy.worth") || 0;
+      } else if (trans_.to) {
+        trans_.amount = bot.userData.get(trans_.to, "economy.worth") || 0;
+      }
     }
 
     if (!trans_.amount || trans_.amount < 0) {
@@ -30,25 +40,24 @@ module.exports = (bot) => {
       throw new Error("failed transfer, no method given");
     }
 
-    if (trans_.to) {
-      const worth = bot.userData.get(trans_.to, "economy.value");
-      bot.userData.set(trans_.to, "economy.value", worth + trans_.amount);
-      bot.userData.set(trans_.to, [
+    const trans = function (userID, amount) {
+      const worth = (bot.userData.get(userID, "economy.worth") || 0) + amount;
+      bot.userData.set(userID, "economy.worth", worth);
+      bot.userData.set(userID, [
         "economy",
         "transactions",
-         Date.now().toString()
-      ], trans_);
+        time
+      ], bot._.defaultsDeep({
+        worth
+      }, trans_));
+    };
+
+    if (trans_.to) {
+      trans(trans_.to, trans_.amount);
     }
 
     if (trans_.from) {
-      trans_.amount *= -1;
-      const worth = bot.userData.get(trans_.from, "economy.value");
-      bot.userData.set(trans_.from, "economy.value", worth + trans_.amount);
-      bot.userData.set(trans_.from, [
-        "economy",
-        "transactions",
-         Date.now().toString()
-      ], trans_);
+      trans(trans_.from, -trans_.amount);
     }
   };
 
@@ -67,9 +76,9 @@ module.exports = (bot) => {
 
     // populate fields with valid entries
     for (let uid in bot.userData.raw) {
-      let value = bot._.get(bot.userData.raw[uid], "economy.value");
-      if (value && bot.users.get(uid)) {
-        fields[bot.users.get(uid).username + "#" + bot.users.get(uid).discriminator] = value;
+      let worth = bot._.get(bot.userData.raw[uid], "economy.worth");
+      if (worth && bot.users.get(uid)) {
+        fields[bot.users.get(uid).username + "#" + bot.users.get(uid).discriminator] = worth;
       }
     }
 
@@ -207,7 +216,7 @@ module.exports = (bot) => {
 
     const guildID = msg.channel.guild.id;
     const currency = bot.guildData.get(guildID, "economy.currency") || "fucks";
-    const worth = bot.userData.get(userId, "economy.value");
+    const worth = bot.userData.get(userId, "economy.worth") || 0;
     let message = `${username}. worthless.`;
 
     if (worth < 0) {
@@ -225,7 +234,7 @@ module.exports = (bot) => {
     description: "economy",
     aliases: [
       "$",
-      "value"
+      "worth"
     ]
   });
 
@@ -233,7 +242,7 @@ module.exports = (bot) => {
     const userID = msg.author.id;
     const guildID = msg.channel.guild.id;
     const currency = bot.guildData.get(guildID, "economy.currency") || "fucks";
-    const worth = bot.userData.get(userID, "economy.value");
+    const worth = bot.userData.get(userID, "economy.worth") || 0;
 
     if (args[0] && args[0].match(/^[0-9]+|(all)$/) && args[0] !== "0" && args[1] && args[1].match(/h|t/i)) {
       const betAmount = args[0] === "all" ? worth : parseInt(args[0], 10);
@@ -241,7 +250,7 @@ module.exports = (bot) => {
       const coin = Date.now() % 2;
       const outcome = betOn == coin;
 
-      if (betAmount > worth && betAmount > 0) {
+      if (betAmount > worth || worth === 0) {
         return bot.send(msg, msg.author.username + " is too poor for this bet");
       }
 
@@ -277,7 +286,7 @@ module.exports = (bot) => {
     const userID = msg.author.id;
     const guildID = msg.channel.guild.id;
     const currency = bot.guildData.get(guildID, "economy.currency") || "fucks";
-    const giverWorth = bot.userData.get(userID, "economy.value");
+    const giverWorth = bot.userData.get(userID, "economy.worth") || 0;
 
     if (msg.mentions[0] && !msg.mentions[0].bot) {
       if (msg.channel.guild.members.get(msg.mentions[0].id)) {
@@ -292,7 +301,7 @@ module.exports = (bot) => {
           let reason = args;
           reason.shift();
           reason.shift();
-          reason.join(" ");
+          reason = reason.join(" ");
 
           transact({
             to: recipientID,
