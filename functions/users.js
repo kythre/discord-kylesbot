@@ -34,6 +34,10 @@ module.exports = (bot) => {
       loserID = args[0];
     }
 
+    if (!bot.users.get(loserID)) {
+      return bot.send(msg, "`invalid user`");
+    }
+
     if (loserID && args[1]) {
       args.shift();
       if (operation) {
