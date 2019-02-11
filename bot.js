@@ -24,17 +24,19 @@ process.on("exit", async (code) => {
 process.on("unhandledRejection", (err) => log.err(err, "Unhandled Rejection", "Bot"));
 process.on("uncaughtException", (err) => log.err(err, "Unhandled Exception", "Bot"));
 
-// settings getters should have a default arguemnt that combines with the saved settings using lodash defaultsdeep
-bot.globalData = {
-    raw: require("./data/global.json"),
+class Data {
+    constructor (file, defaults) {
+        this.raw = require(file);
+        this.defaults = defaults || {};
+    }
+
     get (id, path) {
         if (typeof path === "undefined") {
             return this.raw[id];
         }
-        return bot._.get(this.raw[id], path) || bot._.get({
-            // defaults
-        }, path);
-    },
+        return bot._.get(this.raw[id], path) || bot._.get(this.defaults, path);
+    }
+
     set (id, path, value) {
         if (typeof value === "undefined") {
             throw new Error("attempt to set guild setting to undefined");
@@ -42,41 +44,13 @@ bot.globalData = {
         this.raw[id] = this.raw[id] || {};
         bot._.set(this.raw[id], path, value);
     }
-};
-bot.guildData = {
-    raw: require("./data/guilds.json"),
-    get (id, path) {
-        if (typeof path === "undefined") {
-            return this.raw[id];
-        }
-        return bot._.get(this.raw[id], path) || bot._.get({
-            prefix: "k!"
-        }, path);
-    },
-    set (id, path, value) {
-        if (typeof value === "undefined") {
-            throw new Error("attempt to set guild setting to undefined");
-        }
-        this.raw[id] = this.raw[id] || {};
-        bot._.set(this.raw[id], path, value);
-    }
-};
-bot.userData = {
-    raw: require("./data/users.json"),
-    get (id, path) {
-        if (typeof path === "undefined") {
-            return this.raw[id];
-        }
-        return bot._.get(this.raw[id], path);
-    },
-    set (id, path, value) {
-        if (typeof value === "undefined") {
-            throw new Error("attempt to set guild setting to undefined");
-        }
-        this.raw[id] = this.raw[id] || {};
-        bot._.set(this.raw[id], path, value);
-    }
-};
+}
+
+bot.globalData = new Data("./data/global.json");
+bot.guildData = new Data("./data/guilds.json", {
+    prefix: "k!"
+});
+bot.userData = new Data("./data/users.json");
 bot.getCommand = (cmdName) => bot.commands.find((cmd) => cmd.label === cmdName || cmd.aliases.find((alias) => alias === cmdName));
 bot.eris = Eris;
 bot.commands = [];
@@ -164,7 +138,7 @@ bot.on("messageCreate", async (msg) => {
     }
 
     const guild = msg.channel.guild ? msg.channel.guild : "";
-    const prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${guild ? bot.guildData.get(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : bot.guildDataDefault.prefix}))\\s?`, "gi");
+    const prefixRegex = new RegExp(`^((<@!?${bot.user.mention.slice(2)})|(${bot.guildData.get(guild.id, "prefix").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}))\\s?`, "gi");
     let prefix = msg.content.match(prefixRegex);
     prefix = prefix ? prefix[0] : "";
 
@@ -186,7 +160,7 @@ bot.on("messageCreate", async (msg) => {
             }
             bot.send(msg, prefix + "help");
         } else {
-            bot.getDMChannel(bot.owner).then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
+            // bot.getDMChannel(bot.owner).then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
         }
         return;
     }
@@ -194,15 +168,21 @@ bot.on("messageCreate", async (msg) => {
     msg.command = command;
 
     // if user is blacklisted
-    if ((bot._.get(bot.userData, `${msg.author.id}.tags`) || []).includes("blacklisted")) {
+    if ((bot.userData.get(msg.author.id, "tags") || []).includes("blacklisted")) {
         bot.commandDeny(msg, "USER_BLACKLISTED");
         return;
     }
-    
+
     // if command is currently being processed
     if (msg.channel.cmdrunning) {
         bot.commandDeny(msg, "CURRENTLY_RUNNING");
         return;
+    }
+
+    for (let i in bot._.get(command, "requirements.permissions") || {}) {
+        if (bot.checkPerm(msg, i) !== command.requirements.permissions[i]) {
+            return;
+        }
     }
 
     // if command is bot owner only
@@ -217,11 +197,17 @@ bot.on("messageCreate", async (msg) => {
         return;
     }
 
+    // if command is dm only
+    if (guild && command.dmOnly) {
+        bot.commandDeny(msg, "DM_ONLY");
+        return;
+    }
+
     let args = msg.content.slice(prefix.length + command.label.length);
 
     // gross
     // split args unless the command needs the args together
-    if (command.label === "eval" || command.label === "say") {
+    if (command.label === "eval" || command.label === "say" || command.label === "confess") {
         args = args.split(" ").slice(1);
     } else {
         args = bot._.trim(args);
@@ -237,7 +223,9 @@ bot.on("messageCreate", async (msg) => {
         args = bot._.flattenDeep(args);
     }
 
-    log.cmd(msg, bot);
+    if (command.label !== "confess") {
+        log.cmd(msg, bot);
+    }
 
     // msg.channel.cmdrunning = true;
 
