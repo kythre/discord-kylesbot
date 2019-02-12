@@ -87,7 +87,7 @@ module.exports = (bot) => {
       return;
     }
 
-    let k = (/\b(im|i'm|i`m|i‘m)\s(.+)/ig).exec(msg.content);
+    let k = (/\b(i(?:'|"|‘|`|’)?m)\s(.+)/ig).exec(msg.content);
 
     if (k) {
       if (k[2].match(/^dad/i)) {
