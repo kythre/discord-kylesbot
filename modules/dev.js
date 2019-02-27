@@ -15,7 +15,7 @@ module.exports = (bot) => {
       let evaled;
 
       try {
-        evaled = eval(input);
+        evaled = await eval(input);
       } catch (err) {
         evaled = err;
         delete evaled.stack;

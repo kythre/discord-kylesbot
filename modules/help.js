@@ -44,11 +44,11 @@ module.exports = (bot) => {
           fields: [
             {
               name: "description",
-              value: cmd.fullDescription
+              value: cmd.fullDescription ||  "BRUH ITS EMPTY YOU STUPID FUCKING DEVELOPER RRR"
             },
             {
               name: "arguments",
-              value: cmd.usage
+              value: cmd.usage || "BRUH ITS EMPTY YOU STUPID FUCKING DEVELOPER RRR"
             }
           ]
         });

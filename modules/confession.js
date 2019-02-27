@@ -89,38 +89,38 @@ module.exports = async (bot) => {
   }, {
     fullDescription: "confess to a confession channel",
     dmOnly: true,
-    description: "confess"
+    description: "confession"
   });
 
-  bot.registerCommand("reveal", async (msg, args) => {
-    const confessChannel = Object.entries(bot.globalData.get("confession")).find((o) => o[1].channel === msg.channel.id)[1];
-    const confession = confessChannel.confession[args[0]];
-    if (confession) {
-      if (confession[0] !== msg.author.id && msg.author.id !== bot.owner) {
-        bot.send(msg, "you cant reveal someone else's confession");
-        return;
-      }
+  // bot.registerCommand("reveal", async (msg, args) => {
+  //   const confessChannel = Object.entries(bot.globalData.get("confession")).find((o) => o[1].channel === msg.channel.id)[1];
+  //   const confession = confessChannel.confession[args[0]];
+  //   if (confession) {
+  //     if (confession[0] !== msg.author.id && msg.author.id !== bot.owner) {
+  //       bot.send(msg, "you cant reveal someone else's confession");
+  //       return;
+  //     }
 
-      const confessor = bot.users.get(confession[0]);
-      bot.edit({
-        id: args[0],
-        channel: {
-          id: msg.channel.id
-        }
-      }, {
-        description: confession[1],
-        author: {
-          name: confessor.username,
-          icon_url: `https://cdn.discordapp.com/avatars/${confessor.id}/${confessor.avatar}.png`
-          }
-      });
-    } else {
-      bot.send(msg, "confession not found");
-    }
-    msg.delete();
-  }, {
-    fullDescription: "confess to a confession channel",
-    guildOnly: true,
-    description: "reveal"
-  });
+  //     const confessor = bot.users.get(confession[0]);
+  //     bot.edit({
+  //       id: args[0],
+  //       channel: {
+  //         id: msg.channel.id
+  //       }
+  //     }, {
+  //       description: confession[1],
+  //       author: {
+  //         name: confessor.username,
+  //         icon_url: `https://cdn.discordapp.com/avatars/${confessor.id}/${confessor.avatar}.png`
+  //         }
+  //     });
+  //   } else {
+  //     bot.send(msg, "confession not found");
+  //   }
+  //   msg.delete();
+  // }, {
+  //   fullDescription: "confess to a confession channel",
+  //   guildOnly: true,
+  //   description: "confession"
+  // });
 };

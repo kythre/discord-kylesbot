@@ -37,14 +37,12 @@ module.exports = (bot) => {
 
     if (membercache && (persistNick || persistRoles)) {
       setTimeout(() => {
-        try {
-          member.edit({
-            roles: persistRoles ? member.roles.concat(membercache.roles) : member.roles,
-            nick: persistNick ? membercache.nick : member.nick
-          }, "Persist");
-        } catch (err) {
-          bot.error("Persists", err);
-        }
+        member.edit({
+//          roles: persistRoles ? member.roles.concat(membercache.roles) : member.roles,
+          roles: persistRoles ? membercache.roles : member.roles,
+          nick: persistNick ? membercache.nick : member.nick
+        }, "Persist").catch({
+        });
       }, 1000);
     }
   });

@@ -78,20 +78,6 @@ bot.on("ready", async () => {
         return;
     }
 
-    await fs.readdir("./modules", {
-        withFileTypes: true
-    }, (err, files) => {
-
-        for (let i in files) {
-            let file = files[i];
-
-            if (!file.isDirectory()) {
-                require("./modules/" + file.name)(bot);
-                log.log(`${file.name}`, "Module loaded:");
-            }
-        }
-    });
-
     await bot.audit();
 
     bot.isReady = true;
@@ -126,14 +112,6 @@ bot.on("messageCreate", async (msg) => {
     }
 
     if (!bot.isReady || !msg.author || msg.author === bot.user || msg.author.bot) {
-        return;
-    }
-
-    if (msg.content.includes("Lucy.png") || msg.content.includes("sf.png") || (msg.attachments[0] ? msg.attachments[0].url.includes("Lucy.png") || msg.attachments[0].url.includes("sf.png") : false)) {
-        bot.getDMChannel(bot.owner).then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
-        log.log("lucy image found");
-        console.log(msg);
-        msg.delete();
         return;
     }
 
