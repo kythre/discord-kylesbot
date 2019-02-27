@@ -67,7 +67,7 @@ module.exports = (bot) => {
   });
 
   bot.on("guildMemberAdd", (guild, member) => {
-    let counts = bot.guildData.get(guild.id, "membercount.counts");
+    let counts = bot.guildData.get(guild.id, "membercount.counts") || {};
 
     if (member.bot) {
       counts.bot += 1;
