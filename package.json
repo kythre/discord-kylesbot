@@ -10,7 +10,8 @@
     "eslint": "^5.9.0",
     "mic": "^2.1.2",
     "moment": "^2.23.0",
-    "pcm-util": "^3.0.0"
+    "pcm-util": "^3.0.0",
+    "request": "^2.88.0"
   },
   "devDependencies": {},
   "scripts": {

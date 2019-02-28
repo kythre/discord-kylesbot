@@ -2,13 +2,15 @@ const secret = require("./data/secret.json");
 const Eris = require("eris");
 const bot = new Eris(secret.token);
 const fs = require("fs");
-const log = require("./lib/log.js");
 const _ = require("lodash");
 
 require("./lib/message.js")(bot);
 require("./lib/file.js")(bot);
 require("./lib/commands.js")(bot);
 require("./lib/misc.js")(bot);
+require("./lib/log.js")(bot);
+
+const log = bot.log;
 
 process.on("SIGINT", async () => {
     await bot.save();
@@ -80,16 +82,15 @@ bot.on("ready", async () => {
 
     await bot.audit();
 
-    bot.isReady = true;
-
     // save data every 10 minutes
     setInterval(async () => {
         log.log("start", "Save");
         await bot.save();
         log.log("done", "Save");
     }, 600000);
-
-    log.ready(bot);
+    
+    bot.isReady = true;
+    log.ready();
 });
 
 bot.on("guildCreate", async (guild) => {
@@ -201,6 +202,7 @@ bot.on("messageCreate", async (msg) => {
         args = bot._.flattenDeep(args);
     }
 
+    // gross
     if (command.label !== "confess") {
         log.cmd(msg, bot);
     }
