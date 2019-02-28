@@ -7,16 +7,31 @@ module.exports = (bot) => {
       args: "[anything]",
       description: "says"
     },
-    generator: (msg, args) => {
+    generator: async (msg, args) => {
       let channel = msg.channel;
 
       if (args[0].match(/[0-9]{18}/)) {
+        const channelid = args[0];
         const guildid = bot.channelGuildMap[channelid];
-        const channelid = args[0].split(":")[0];
         const guild = bot.guilds.get(guildid);
 
-        channel = guild.channels.get(channelid);
+        try {       
+          if (guild) {
+            channel = guild.channels.get(channelid);
+          } else {
+            channel = await bot.users.get(channelid).getDMChannel();
+          }
+        } catch (err) {
+          bot.send(msg, "invalid channel");
+          return;
+        }
+
         args.shift();
+
+        bot.send(msg, {
+          title: `said \`${args.join(" ")}\` in \`${(channel.name ? "#" + channel.name : "DM")}\` of \`${(guild ? guild.name : channel.recipient.username)}\``,
+          url: guild ? "https://discordapp.com/channels/" + guild.id + "/" + channel.id : ""
+        });
       } else {
         msg.delete().catch(() => {
           // fail

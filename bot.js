@@ -139,6 +139,7 @@ bot.on("messageCreate", async (msg) => {
             }
             bot.send(msg, prefix + "help");
         } else {
+            log.log(msg.content, "DM from " + msg.author.username + "#" + msg.author.discriminator + `(${msg.author.id})`);
             // bot.getDMChannel(bot.owner).then((c) => bot.createMessage(c.id, `\`\`\` ${msg.author.username} ${msg.author.id}\n--------------------\n${msg.cleanContent}\`\`\``));
         }
         return;
