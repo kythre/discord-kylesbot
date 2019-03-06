@@ -2,7 +2,7 @@ module.exports = (bot) => {
   // say command
   bot.registerCommand({
     name: "say",
-    category: "fun",
+    category: "bot owner",
     info: {
       args: "[anything]",
       description: "says"
@@ -15,7 +15,7 @@ module.exports = (bot) => {
         const guildid = bot.channelGuildMap[channelid];
         const guild = bot.guilds.get(guildid);
 
-        try {       
+        try {
           if (guild) {
             channel = guild.channels.get(channelid);
           } else {
